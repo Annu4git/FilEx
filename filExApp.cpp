@@ -1,11 +1,10 @@
-#include<iostream>
-#include<string>
+#include <iostream>
+#include <string>
 #include <bits/stdc++.h>
 
 #define clear_terminal() printf("\033[H\033[J")
 
-#include"file_utils.h"
-#include "directory_utils.h"
+#include "linux_cmd.h"
 
 using namespace std;
 
@@ -13,12 +12,7 @@ int main() {
 
 	clear_terminal();
 
-	string str = get_current_directory_path();
-	char cwd[str.length()+1]; 
-    strcpy(cwd, str.c_str()); 
-	showFiles(cwd);
-
-	fflush(stdin);
+	ls_impl();
 
 	while(1);
 	fflush(stdin);
