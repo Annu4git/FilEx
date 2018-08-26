@@ -26,26 +26,24 @@ int main()
 int getch(void)
 {
   char ch;
-  struct termios oldt;
-  struct termios newt;
-  tcgetattr(STDIN_FILENO, &oldt); /*store old settings */
-  newt = oldt; /* copy old settings to new settings */
-  newt.c_lflag &= ~(ICANON | ECHO); /* make one change to old settings in new settings */
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt); /*apply the new settings immediatly */
+  
   ch = getchar(); /* standard getchar call */
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt); /*reapply the old settings */
+  
 
   cout << ch << endl;
-  if(ch == KEY_UP) {
+
+
+
+  if(ch == 27) {
     cout << "up key";
   } 
-  if(ch == KEY_DOWN) {
+  if(ch == 66) {
     cout << "down key";
   }
-  if(ch == KEY_RIGHT) {
+  if(ch == 67) {
     cout << "right key";
   } 
-  if(ch == KEY_LEFT) {
+  if(ch == 68) {
     cout << "left key";
   }
     return ch; /*return received char */

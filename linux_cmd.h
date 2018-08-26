@@ -9,6 +9,8 @@
 
 using namespace std;
 
-void ls_impl();
+vector<string> ls_impl();
+
+vector<string> ls_impl(string current_directory_path);
 
 #endif

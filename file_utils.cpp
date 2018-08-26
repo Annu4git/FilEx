@@ -8,6 +8,8 @@
 #include <iostream>
 #include <pwd.h>
 #include <grp.h>
+#include <bits/stdc++.h>
+#include <cstring>
 
 #include "file_utils.h"
 
@@ -39,7 +41,7 @@ void print_size(size_t file_size) {
 	cout << file_size << " " << unit << " ";
 }
 
-void showFiles(char *current_directory_path) {
+vector<string> show_and_get_file_list(char *current_directory_path) {
 	DIR *current_directory;
 	
 	struct dirent *current_file;
@@ -47,12 +49,26 @@ void showFiles(char *current_directory_path) {
 	struct passwd *pw;
 	struct group  *gr;
 
+	/* to store file in a vector list */
+	vector<string> file_list;
 
 	current_directory = opendir(current_directory_path);
 
 	while((current_file = readdir(current_directory)) != NULL) {
-		stat(current_file->d_name, &current_stat);
-		cout << current_file->d_name << " ";
+		char* file_name = current_file->d_name;
+
+		string qualified_file_name(current_directory_path);
+		string temp_file_name(file_name);
+		string seprator = "/";
+
+		qualified_file_name = qualified_file_name + seprator;
+		qualified_file_name = qualified_file_name + temp_file_name;
+		
+		file_list.push_back(qualified_file_name);
+
+		stat(file_name, &current_stat);
+
+		cout << file_name << " ";
 
 		print_size(current_stat.st_size);
 
@@ -87,10 +103,12 @@ void showFiles(char *current_directory_path) {
 		char date[10];
 		strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_ctime)));
 		cout << date;
-		
+
 		cout << endl;
 
 	}
 
 	closedir(current_directory);
+
+	return file_list;
 }
