@@ -17,6 +17,8 @@ void hold_terminal(vector < tuple < string, string, char > > file_list);
 
 int trim_path(string &path);
 
+int relative_index = 3;
+
 int main() {
 
 	keyboard_settings_off();
@@ -162,19 +164,19 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 
 			/*int pid = fork();
 			if (pid == 0) {
-  				execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x-1], (char *)0);
+  				execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x - relative_index], (char *)0);
   				exit(1);
 			}*/	
 
-			if(get<2>(file_list[app.cursor_position_x-1]) == '-') {
-				system(("xdg-open " + get<1>(file_list[app.cursor_position_x-1])).c_str());	
-				string path = get<1>(file_list[app.cursor_position_x-1]);
+			if(get<2>(file_list[app.cursor_position_x - relative_index]) == '-') {
+				system(("xdg-open " + get<1>(file_list[app.cursor_position_x - relative_index])).c_str());	
+				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
 				printf("\033[32;1H");
 				cout << endl << "hell yeah is : " << path << endl;
 				printf("\033[1;1H");
-			} else if(get<0>(file_list[app.cursor_position_x-1]) == ".") {
+			} else if(get<0>(file_list[app.cursor_position_x - relative_index]) == ".") {
 
-				string path = get<1>(file_list[app.cursor_position_x-1]);
+				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
 				trim_path(path);
 				printf("\033[32;1H");
 				cout << endl << "                                                    ";
@@ -182,11 +184,11 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 				printf("\033[32;1H");
 				cout << endl << "single dot hell yeah is : " << path << endl;
 				printf("\033[1;1H");
-			} else if(get<0>(file_list[app.cursor_position_x-1]) == "..") {
+			} else if(get<0>(file_list[app.cursor_position_x - relative_index]) == "..") {
 				
 				int status;
 
-				string path = get<1>(file_list[app.cursor_position_x-1]);
+				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
 
 				trim_path(path);
 				status = trim_path(path);
@@ -206,13 +208,19 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 				}
 				
 			} else {
+				
+				app.reset_index_of_first_record_to_be_displayed();
+				
+				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+
 				clear_terminal();
 
-				string path = get<1>(file_list[app.cursor_position_x-1]);
+				printf("\033[32;1H");
+				cout << endl << "path is : " << path << endl;
+				app.reset_cursor_position();
+				
 				
 				file_list = ls_impl(path, app);	// defined in linux_cmd
-
-				app.reset_cursor_position();
 
 				app.current_path = path;
 

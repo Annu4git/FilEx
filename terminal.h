@@ -30,6 +30,8 @@ public:
 
 	terminal();
 
+	void reset_index_of_first_record_to_be_displayed();
+	
 	void reset_cursor_position();
 
 	void set_cursor_position();

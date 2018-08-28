@@ -29,6 +29,10 @@ terminal::terminal() {
 
 }
 
+void terminal::reset_index_of_first_record_to_be_displayed() {
+	index_of_first_record_to_be_displayed = 0;
+}
+
 void terminal::reset_cursor_position() {
 	cursor_position_x = 3;
 	cursor_position_y = 1;
