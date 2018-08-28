@@ -5,6 +5,6 @@
 
 using namespace std;
 
-vector<string> show_and_get_file_list(char *s);
+vector < tuple < string, string, char > > show_and_get_file_list(string s);
 
 #endif

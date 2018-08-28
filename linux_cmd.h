@@ -9,8 +9,8 @@
 
 using namespace std;
 
-vector<string> ls_impl();
+vector < tuple < string, string, char > > ls_impl(bool first_time, string &root_path);
 
-vector<string> ls_impl(string current_directory_path);
+vector < tuple < string, string, char > > ls_impl(string current_directory_path);
 
 #endif

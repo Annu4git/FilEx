@@ -15,6 +15,4 @@ void keyboard_settings_on();
 
 string keyboard_handle();
 
-void cursor_position(int x, int y);
-
 #endif

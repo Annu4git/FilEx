@@ -10,6 +10,7 @@
 #include <grp.h>
 #include <bits/stdc++.h>
 #include <cstring>
+#include <tuple>
 
 #include "file_utils.h"
 
@@ -41,32 +42,34 @@ void print_size(size_t file_size) {
 	cout << file_size << " " << unit << " ";
 }
 
-vector<string> show_and_get_file_list(char *current_directory_path) {
+vector < tuple < string, string, char > > show_and_get_file_list(string current_directory_path) {
+	printf("\033[32;1H");
+
 	DIR *current_directory;
 	
-	struct dirent *current_file;
+	struct dirent **files;
 	struct stat current_stat;
 	struct passwd *pw;
 	struct group  *gr;
 
 	/* to store file in a vector list */
-	vector<string> file_list;
+	vector < tuple < string, string, char > > file_list;
 
-	current_directory = opendir(current_directory_path);
+	//current_directory = opendir(current_directory_path.c_str());
+	int number_of_records = scandir(current_directory_path.c_str(), &files, NULL, alphasort);
 
-	while((current_file = readdir(current_directory)) != NULL) {
-		char* file_name = current_file->d_name;
+	printf("\033[1;1H");
+	for(int i=0;i<number_of_records;i++) {
 
-		string qualified_file_name(current_directory_path);
-		string temp_file_name(file_name);
+		string file_name = files[i]->d_name;
+
+		string qualified_file_name = current_directory_path;
 		string seprator = "/";
 
 		qualified_file_name = qualified_file_name + seprator;
-		qualified_file_name = qualified_file_name + temp_file_name;
-		
-		file_list.push_back(qualified_file_name);
+		qualified_file_name = qualified_file_name + file_name;
 
-		stat(file_name, &current_stat);
+		stat(file_name.c_str(), &current_stat);
 
 		cout << file_name << " ";
 
@@ -77,9 +80,9 @@ vector<string> show_and_get_file_list(char *current_directory_path) {
 
 		cout << pw->pw_name << " " << gr->gr_name << " ";
 
-		
-
 		char is_directory = (S_ISDIR(current_stat.st_mode)) ? 'd' : '-';
+
+		file_list.push_back(make_tuple(file_name, qualified_file_name, is_directory));
 
 		char is_read_permission_for_user = (current_stat.st_mode & S_IRUSR) ? 'r' : '-';
 		char is_write_permission_for_user = (current_stat.st_mode & S_IWUSR) ? 'w' : '-';
@@ -93,6 +96,7 @@ vector<string> show_and_get_file_list(char *current_directory_path) {
 		char is_write_permission_for_others = (current_stat.st_mode & S_IWOTH) ? 'w' : '-';
 		char is_execute_permission_for_others = (current_stat.st_mode & S_IXOTH) ? 'x' : '-';
 		
+		cout << is_directory << " ";
 		cout << is_read_permission_for_user << is_write_permission_for_user << is_execute_permission_for_user;
 		cout << is_read_permission_for_group << is_write_permission_for_group << is_execute_permission_for_group;
 		cout << is_read_permission_for_others << is_write_permission_for_others << is_execute_permission_for_others;
@@ -105,10 +109,9 @@ vector<string> show_and_get_file_list(char *current_directory_path) {
 		cout << date;
 
 		cout << endl;
-
 	}
-
-	closedir(current_directory);
+	
+	//closedir(current_directory);
 
 	return file_list;
 }

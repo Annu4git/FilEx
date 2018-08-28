@@ -61,13 +61,11 @@ string keyboard_handle() {
 		input = "LEFT";
 	} else if(ch == '\n') {
 		input = "ENTER";
-	}
+	} else if(ch == 'h' || ch == 'H') {
+		input = "ROOT";
+	} else if(ch == 127) {
+		input = "BACKSLASH";
+	} 
 
 	return input;
-}
-
-void cursor_position(int x, int y) {
-	if(x > 0 && y > 0) {
-		printf("\033[%d;%dH", x, y);
-	}
 }
