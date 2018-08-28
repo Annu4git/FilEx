@@ -13,10 +13,11 @@
 #include <tuple>
 
 #include "file_utils.h"
+#include "terminal.h"
 
 using namespace std;
 
-void print_size(size_t file_size) {
+void print_size(size_t file_size, terminal &app) {
 
 	int multiple = 0;
 
@@ -39,11 +40,12 @@ void print_size(size_t file_size) {
 		unit = "GB";
 	}
 
+	//app.cursor_position_y += 10;
+	//app.set_cursor_position();
 	cout << file_size << " " << unit << " ";
 }
 
-vector < tuple < string, string, char > > show_and_get_file_list(string current_directory_path) {
-	printf("\033[32;1H");
+vector < tuple < string, string, char > > show_and_get_file_list(string current_directory_path, terminal &app) {
 
 	DIR *current_directory;
 	
@@ -52,64 +54,71 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 	struct passwd *pw;
 	struct group  *gr;
 
-	/* to store file in a vector list */
+	/* to store file in a tuple list */
 	vector < tuple < string, string, char > > file_list;
 
 	//current_directory = opendir(current_directory_path.c_str());
 	int number_of_records = scandir(current_directory_path.c_str(), &files, NULL, alphasort);
 
-	printf("\033[1;1H");
-	for(int i=0;i<number_of_records;i++) {
+	int i = app.index_of_first_record_to_be_displayed;
+	int total_records_to_show = app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed;
+	
+	if(i < number_of_records && i > -1) {
 
-		string file_name = files[i]->d_name;
+		for(; i <=  total_records_to_show; i++) {
 
-		string qualified_file_name = current_directory_path;
-		string seprator = "/";
+			string file_name = files[i]->d_name;
 
-		qualified_file_name = qualified_file_name + seprator;
-		qualified_file_name = qualified_file_name + file_name;
+			string qualified_file_name = current_directory_path;
+			string seprator = "/";
 
-		stat(file_name.c_str(), &current_stat);
+			qualified_file_name = qualified_file_name + seprator;
+			qualified_file_name = qualified_file_name + file_name;
 
-		cout << file_name << " ";
+			stat(file_name.c_str(), &current_stat);
 
-		print_size(current_stat.st_size);
+			cout << file_name << " ";
 
-		pw = getpwuid(current_stat.st_uid);
-		gr = getgrgid(current_stat.st_gid);
+			print_size(current_stat.st_size, app);
 
-		cout << pw->pw_name << " " << gr->gr_name << " ";
+			pw = getpwuid(current_stat.st_uid);
+			gr = getgrgid(current_stat.st_gid);
 
-		char is_directory = (S_ISDIR(current_stat.st_mode)) ? 'd' : '-';
+			cout << pw->pw_name << " " << gr->gr_name << " ";
 
-		file_list.push_back(make_tuple(file_name, qualified_file_name, is_directory));
+			char is_directory = (S_ISDIR(current_stat.st_mode)) ? 'd' : '-';
 
-		char is_read_permission_for_user = (current_stat.st_mode & S_IRUSR) ? 'r' : '-';
-		char is_write_permission_for_user = (current_stat.st_mode & S_IWUSR) ? 'w' : '-';
-		char is_execute_permission_for_user = (current_stat.st_mode & S_IXUSR) ? 'x' : '-';
+			file_list.push_back(make_tuple(file_name, qualified_file_name, is_directory));
 
-		char is_read_permission_for_group = (current_stat.st_mode & S_IRGRP) ? 'r' : '-';
-		char is_write_permission_for_group = (current_stat.st_mode & S_IWGRP) ? 'w' : '-';
-		char is_execute_permission_for_group = (current_stat.st_mode & S_IXGRP) ? 'x' : '-';
+			char is_read_permission_for_user = (current_stat.st_mode & S_IRUSR) ? 'r' : '-';
+			char is_write_permission_for_user = (current_stat.st_mode & S_IWUSR) ? 'w' : '-';
+			char is_execute_permission_for_user = (current_stat.st_mode & S_IXUSR) ? 'x' : '-';
 
-		char is_read_permission_for_others = (current_stat.st_mode & S_IROTH) ? 'r' : '-';
-		char is_write_permission_for_others = (current_stat.st_mode & S_IWOTH) ? 'w' : '-';
-		char is_execute_permission_for_others = (current_stat.st_mode & S_IXOTH) ? 'x' : '-';
-		
-		cout << is_directory << " ";
-		cout << is_read_permission_for_user << is_write_permission_for_user << is_execute_permission_for_user;
-		cout << is_read_permission_for_group << is_write_permission_for_group << is_execute_permission_for_group;
-		cout << is_read_permission_for_others << is_write_permission_for_others << is_execute_permission_for_others;
+			char is_read_permission_for_group = (current_stat.st_mode & S_IRGRP) ? 'r' : '-';
+			char is_write_permission_for_group = (current_stat.st_mode & S_IWGRP) ? 'w' : '-';
+			char is_execute_permission_for_group = (current_stat.st_mode & S_IXGRP) ? 'x' : '-';
 
-		//cout << " " << localtime(&(current_stat.st_ctime));
-		cout << " ";
+			char is_read_permission_for_others = (current_stat.st_mode & S_IROTH) ? 'r' : '-';
+			char is_write_permission_for_others = (current_stat.st_mode & S_IWOTH) ? 'w' : '-';
+			char is_execute_permission_for_others = (current_stat.st_mode & S_IXOTH) ? 'x' : '-';
+			
+			cout << is_directory << " ";
+			cout << is_read_permission_for_user << is_write_permission_for_user << is_execute_permission_for_user;
+			cout << is_read_permission_for_group << is_write_permission_for_group << is_execute_permission_for_group;
+			cout << is_read_permission_for_others << is_write_permission_for_others << is_execute_permission_for_others;
 
-		char date[10];
-		strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_ctime)));
-		cout << date;
+			//cout << " " << localtime(&(current_stat.st_ctime));
+			cout << " ";
 
-		cout << endl;
-	}
+			char date[10];
+			strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_ctime)));
+			cout << date;
+
+			cout << endl;
+		}
+	} else {
+		cout << app.index_of_first_record_to_be_displayed;
+	}	
 	
 	//closedir(current_directory);
 

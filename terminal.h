@@ -22,19 +22,31 @@ public:
 
 	int cursor_position_y;
 
+	int index_of_first_record_to_be_displayed;
+
+	int total_records_to_be_displayed;
+
 	terminal();
 
 	void reset_cursor_position();
 
 	void set_cursor_position();
 
-	void move_cursor_up();
+	void set_cursor_position(int x, int y);
 
-	void move_cursor_down();
+	int move_cursor_up();
+
+	int move_cursor_down();
 
 	void move_cursor_right();
 
 	void move_cursor_left();
+
+	void increment_trace_pointer();
+
+	void decrement_trace_pointer();
+
+	void printTrace();
 };
 
 #endif

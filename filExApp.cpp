@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include <string>
 #include <bits/stdc++.h>
 
@@ -18,18 +19,20 @@ int trim_path(string &path);
 
 int main() {
 
-	app.reset_cursor_position();
-
 	keyboard_settings_off();
 
 	clear_terminal();
 
-	vector < tuple < string, string, char > >  file_list = ls_impl(true, app.root_path);	// defined in linux_cmd
-	app.trace[++app.trace_pointer] = app.root_path;
+	app.reset_cursor_position();
+
+	vector < tuple < string, string, char > >  file_list = ls_impl(true, app);	// defined in linux_cmd
+	
 	app.current_path = app.root_path;
 
-	cout << endl << "Printing root path only for first time : " << app.root_path << endl;
 	app.set_cursor_position();
+
+	app.increment_trace_pointer();
+	app.trace[app.trace_pointer] = app.root_path;
 	
 	hold_terminal(file_list);
 
@@ -46,10 +49,8 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 			clear_terminal();
 
 			string path = app.root_path;
-			printf("\033[32;1H");
-			cout << endl << "path is : " << path << endl;
-			printf("\033[1;1H");
-			file_list = ls_impl(path);	// defined in linux_cmd
+			
+			file_list = ls_impl(path, app);	// defined in linux_cmd
 
 			cout << endl << "Printing root path should be same : " << app.root_path << endl;
 
@@ -58,19 +59,72 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 		}
 		else if(input == "UP") {
 
-			app.move_cursor_up();
+			int move_up = app.move_cursor_up();
+
+			if(move_up == 1 && app.index_of_first_record_to_be_displayed != 0) {
+				(app.index_of_first_record_to_be_displayed) -- ;
+
+				clear_terminal();
+				int local_x = app.cursor_position_x;
+				int local_y = app.cursor_position_y;
+
+				app.reset_cursor_position();
+				
+				file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+
+				app.set_cursor_position(local_x, local_y);
+
+			}
 
 		} else if(input == "DOWN") {
 
-			app.move_cursor_down();
+			int move_down = app.move_cursor_down();
 
-		} else if(input == "RIGHT") {
+			if(move_down == 1 && 
+				(app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed) < file_list.size()) {
+				(app.index_of_first_record_to_be_displayed) ++ ;
 
-			app.move_cursor_right();
-			
+				clear_terminal();
+				int local_x = app.cursor_position_x;
+				int local_y = app.cursor_position_y;
+
+				app.reset_cursor_position();
+				
+				file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+
+				app.set_cursor_position(local_x, local_y);
+			}
+
 		} else if(input == "LEFT") {
 
-			app.move_cursor_left();
+			if(app.trace_pointer != -1) {
+				clear_terminal();
+
+				string path = app.trace[app.trace_pointer];
+				app.decrement_trace_pointer();
+				
+				file_list = ls_impl(path, app);	// defined in linux_cmd
+
+				app.reset_cursor_position();
+
+				app.current_path = path;
+			}
+			
+			
+		} else if(input == "RIGHT") {
+
+			if(app.trace[(app.trace_pointer)+1] != "0") {
+				clear_terminal();
+				app.increment_trace_pointer();
+				string path = app.trace[app.trace_pointer];
+				
+				file_list = ls_impl(path, app);	// defined in linux_cmd
+
+				app.reset_cursor_position();
+
+				app.current_path = path;
+			}
+			
 			
 		} else if(input == "BACKSLASH") {
 
@@ -86,20 +140,18 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 			if(status != 0) {
 
 				clear_terminal();
-				printf("\033[32;1H");
-
-				cout << endl << "Trim path is : " << path << endl;
-				printf("\033[1;1H");
-				file_list = ls_impl(path);	// defined in linux_cmd
+				
+				file_list = ls_impl(path, app);	// defined in linux_cmd
 
 				cout << endl << "Printing root path should be same : " << app.root_path << endl;
 
-				app.cursor_position_x = 1;
-				app.cursor_position_y = 1;
-
-				app.set_cursor_position();
+				app.reset_cursor_position();
 
 				app.current_path = path;
+
+				app.increment_trace_pointer();
+
+				app.trace[app.trace_pointer] = path;
 			}
 		}
 		
@@ -110,7 +162,6 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
   				execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x-1], (char *)0);
   				exit(1);
 			}*/	
-			cout << " ";
 
 			if(get<2>(file_list[app.cursor_position_x-1]) == '-') {
 				system(("xdg-open " + get<1>(file_list[app.cursor_position_x-1])).c_str());	
@@ -140,43 +191,38 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 				if(status != 0) {
 					clear_terminal();
 
-					printf("\033[32;1H");
-					cout << endl << "                                                    ";
-					cout << "                                                ";
-					cout << endl << "Trim path is : " << path << endl;
-					printf("\033[1;1H");
-					file_list = ls_impl(path);	// defined in linux_cmd
-
-					app.trace[++app.trace_pointer] = path;
+					file_list = ls_impl(path, app);	// defined in linux_cmd
 
 					app.reset_cursor_position();
 
 					app.current_path = path;
+
+					app.increment_trace_pointer();
+
+					app.trace[app.trace_pointer] = path;
 				}
 				
 			} else {
 				clear_terminal();
 
-				printf("\033[31;1H");
-				cout << endl << "break2 " << endl;
-				printf("\033[1;1H");
-
 				string path = get<1>(file_list[app.cursor_position_x-1]);
-				printf("\033[32;1H");
-				cout << endl << "path is : " << path << endl;
-				printf("\033[1;1H");
-				file_list = ls_impl(path);	// defined in linux_cmd
+				
+				file_list = ls_impl(path, app);	// defined in linux_cmd
 
-				app.cursor_position_x = 1;
-				app.cursor_position_y = 1;
-
-				app.set_cursor_position();
+				app.reset_cursor_position();
 
 				app.current_path = path;
 
-				printf("\033[30;1H");
-				cout << endl << "break3 " << endl;
-				printf("\033[1;1H");
+				app.increment_trace_pointer();
+
+				app.trace[app.trace_pointer] = path;
+
+				app.increment_trace_pointer();
+
+				app.trace[app.trace_pointer] = "0";
+
+				app.decrement_trace_pointer();
+
 			}
 			
 		}
