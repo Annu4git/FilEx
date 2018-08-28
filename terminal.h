@@ -26,6 +26,8 @@ public:
 
 	int total_records_to_be_displayed;
 
+	int total_records_in_current_directory;
+
 	terminal();
 
 	void reset_cursor_position();

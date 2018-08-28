@@ -80,19 +80,22 @@ void hold_terminal(vector < tuple < string, string, char > > file_list) {
 
 			int move_down = app.move_cursor_down();
 
-			if(move_down == 1 && 
-				(app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed) < file_list.size()) {
-				(app.index_of_first_record_to_be_displayed) ++ ;
 
-				clear_terminal();
-				int local_x = app.cursor_position_x;
-				int local_y = app.cursor_position_y;
 
-				app.reset_cursor_position();
-				
-				file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+			if(move_down == 1) {
+				if((app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed) < app.total_records_in_current_directory) {
+					(app.index_of_first_record_to_be_displayed) ++ ;
 
-				app.set_cursor_position(local_x, local_y);
+					clear_terminal();
+					int local_x = app.cursor_position_x;
+					int local_y = app.cursor_position_y;
+
+					app.reset_cursor_position();
+					
+					file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+
+					app.set_cursor_position(local_x, local_y);
+				}
 			}
 
 		} else if(input == "LEFT") {

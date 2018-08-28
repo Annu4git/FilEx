@@ -25,6 +25,8 @@ terminal::terminal() {
 
 	total_records_to_be_displayed = 30;
 
+	total_records_in_current_directory = 0;
+
 }
 
 void terminal::reset_cursor_position() {

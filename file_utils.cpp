@@ -60,12 +60,14 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 	//current_directory = opendir(current_directory_path.c_str());
 	int number_of_records = scandir(current_directory_path.c_str(), &files, NULL, alphasort);
 
+	app.total_records_in_current_directory = number_of_records;
+
 	int i = app.index_of_first_record_to_be_displayed;
 	int total_records_to_show = app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed;
 	
 	if(i < number_of_records && i > -1) {
 
-		for(; i <=  total_records_to_show; i++) {
+		for(; i < total_records_to_show; i++) {
 
 			string file_name = files[i]->d_name;
 
