@@ -64,11 +64,6 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 
 	int i = app.index_of_first_record_to_be_displayed;
 	int total_records_to_show = app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed;
-	
-	printf("\033[34;1H");
-	cout << endl << "details are : " << app.index_of_first_record_to_be_displayed
-	<< " " << app.total_records_to_be_displayed << " " << number_of_records;
-	app.reset_cursor_position();
 
 	if(i < number_of_records && i > -1) {
 

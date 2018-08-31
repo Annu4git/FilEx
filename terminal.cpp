@@ -40,7 +40,8 @@ void terminal::reset_cursor_position() {
 }
 
 void terminal::set_cursor_position() {
-	if(cursor_position_x > 2 && cursor_position_x < 33 && cursor_position_y > 0) {
+	if(cursor_position_x > 2 && cursor_position_x < (total_records_in_current_directory + 3) 
+		&& cursor_position_x < 33 && cursor_position_y > 0) {
 		printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
 	}
 }
@@ -48,10 +49,13 @@ void terminal::set_cursor_position() {
 void terminal::set_cursor_position(int x, int y) {
 	cursor_position_x = x;
 	cursor_position_y = y;
-	if(cursor_position_x > 2 && cursor_position_x < 33 && cursor_position_y > 0) {
+	if(cursor_position_x > 2 && cursor_position_x < (total_records_in_current_directory + 3) 
+		&& cursor_position_x < 33 && cursor_position_y > 0) {
 		printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
 	}
 }
+
+
 
 int terminal::move_cursor_up() {
 	if(cursor_position_x > 3) {
@@ -63,7 +67,7 @@ int terminal::move_cursor_up() {
 }
 
 int terminal::move_cursor_down() {
-	if(cursor_position_x < 32) {
+	if(cursor_position_x < 32 && cursor_position_x < (total_records_in_current_directory + 2)) {
 		cursor_position_x ++ ;
 		set_cursor_position();
 		return 0;
@@ -94,3 +98,28 @@ void terminal::printTrace() {
 		cout << trace[i] << "-->";
 	}
 }
+
+
+/****************** specially for command mode **********************/
+
+void terminal::new_line() {
+	cursor_position_x ++ ;
+	cursor_position_y = 1 ;
+	cout << endl;
+}
+
+void terminal::print_text(string text) {
+	cursor_position_y += text.size() ;
+	cout << text;
+}
+
+void terminal::set_cursor_position(bool command_mode) {
+	printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
+}
+
+void terminal::set_cursor_position(int x, int y, bool command_mode) {
+	cursor_position_x = x;
+	cursor_position_y = y;
+	printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
+}
+/****************** specially for command mode **********************/

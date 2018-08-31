@@ -20,7 +20,7 @@ public:
 
 	int cursor_position_x;
 
-	int cursor_position_y;
+	int cursor_position_y;;
 
 	int index_of_first_record_to_be_displayed;
 
@@ -31,12 +31,16 @@ public:
 	terminal();
 
 	void reset_index_of_first_record_to_be_displayed();
-	
+
 	void reset_cursor_position();
 
 	void set_cursor_position();
 
+	void set_cursor_position(bool command_mode);
+
 	void set_cursor_position(int x, int y);
+
+	void set_cursor_position(int x, int y, bool command_mode);
 
 	int move_cursor_up();
 
@@ -51,6 +55,14 @@ public:
 	void decrement_trace_pointer();
 
 	void printTrace();
+
+	/*****************************/
+
+	void new_line();
+
+	void print_text(string text);
+	
+	/*****************************/
 };
 
 #endif
