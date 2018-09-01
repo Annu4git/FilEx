@@ -92,7 +92,7 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 		string input = keyboard_handle();
 		
 		if(input == "COLON") {
-			enter_in_command_mode(app);
+			enter_in_command_mode(file_list, app);
 
 			app.reset_cursor_position();
 
@@ -207,75 +207,9 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 		
 		if(input == "ENTER") {
 
-			/*int pid = fork();
-			if (pid == 0) {
-  				execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x - relative_index], (char *)0);
-  				exit(1);
-			}*/	
+			enter_into_directory(file_list, app, "", "normal");
 
-			if(get<2>(file_list[app.cursor_position_x - relative_index]) == '-') {
-				system(("xdg-open " + get<1>(file_list[app.cursor_position_x - relative_index])).c_str());	
-				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
-				printf("\033[32;1H");
-				cout << endl << "hell yeah is : " << path << endl;
-				printf("\033[1;1H");
-			} else if(get<0>(file_list[app.cursor_position_x - relative_index]) == ".") {
-
-				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
-				trim_path(path, app);
-
-				app.reset_cursor_position();
-				
-			} else if(get<0>(file_list[app.cursor_position_x - relative_index]) == "..") {
-				
-				int status;
-
-				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
-
-				trim_path(path, app);
-				status = trim_path(path, app);
-				
-				if(status != 0) {
-					clear_terminal();
-
-					file_list = ls_impl(path, app);	// defined in linux_cmd
-
-					app.reset_cursor_position();
-
-					app.current_path = path;
-
-					app.increment_trace_pointer();
-
-					app.trace[app.trace_pointer] = path;
-				}
-				
-			} else {
-				
-				app.reset_index_of_first_record_to_be_displayed();
-				
-				string path = get<1>(file_list[app.cursor_position_x - relative_index]);
-
-				clear_terminal();
-
-				app.reset_cursor_position();
-				
-				file_list = ls_impl(path, app);	// defined in linux_cmd
-
-				app.current_path = path;
-
-				app.increment_trace_pointer();
-
-				app.trace[app.trace_pointer] = path;
-
-				app.increment_trace_pointer();
-
-				app.trace[app.trace_pointer] = "0";
-
-				app.decrement_trace_pointer();
-
-				app.reset_cursor_position();
-
-			}
+			input = "";
 			
 		}
 
@@ -298,4 +232,99 @@ int trim_path(string &path, terminal app) {
 	path = path.substr(0, i);
 
 	return 1;
+}
+
+void enter_into_directory(vector < tuple < string, string, char > > &file_list, 
+	terminal &app, string directory_path, string mode) {
+
+	
+
+
+	int relative_index = 3;
+
+	/*int pid = fork();
+	if (pid == 0) {
+			execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x - relative_index], (char *)0);
+			exit(1);
+	}*/	
+
+	if(mode == "normal" && get<2>(file_list[app.cursor_position_x - relative_index]) == '-') {
+		system(("xdg-open " + get<1>(file_list[app.cursor_position_x - relative_index])).c_str());	
+		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+	} else if(mode == "normal" && get<0>(file_list[app.cursor_position_x - relative_index]) == ".") {
+
+		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+
+		trim_path(path, app);
+
+		app.reset_cursor_position();
+		
+	} else if(mode == "normal" && get<0>(file_list[app.cursor_position_x - relative_index]) == "..") {
+		
+		int status;
+
+		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+
+		trim_path(path, app);
+		
+		status = trim_path(path, app);
+		
+		if(status != 0) {
+
+			app.reset_index_of_first_record_to_be_displayed();
+
+			clear_terminal();
+
+			app.reset_cursor_position();
+
+			file_list = ls_impl(path, app);	// defined in linux_cmd
+
+			app.current_path = path;
+
+			app.increment_trace_pointer();
+
+			app.trace[app.trace_pointer] = path;
+
+			app.increment_trace_pointer();
+
+			app.trace[app.trace_pointer] = "0";
+
+			app.decrement_trace_pointer();
+
+			app.reset_cursor_position();
+		}
+		
+	} else {
+		
+		app.reset_index_of_first_record_to_be_displayed();
+		
+		string path;
+
+		if(mode == "command") {
+			path = directory_path;
+		} else {
+			path = get<1>(file_list[app.cursor_position_x - relative_index]);
+		}
+
+		clear_terminal();
+
+		app.reset_cursor_position();
+		
+		file_list = ls_impl(path, app);	// defined in linux_cmd
+
+		app.current_path = path;
+
+		app.increment_trace_pointer();
+
+		app.trace[app.trace_pointer] = path;
+
+		app.increment_trace_pointer();
+
+		app.trace[app.trace_pointer] = "0";
+
+		app.decrement_trace_pointer();
+
+		app.reset_cursor_position();
+
+	}
 }

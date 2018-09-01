@@ -12,25 +12,77 @@
 
 using namespace std;
 
-void select_command(terminal &app, vector <string> token_stream) {
-	cout << "In select_command " << endl;
+void select_command(vector < tuple < string, string, char > > &file_list, 
+	terminal &app, vector <string> token_stream) {
 	if(token_stream.size() > 0) {
-		for(auto i : token_stream) {
-			cout << i << endl;
+		
+		string command = token_stream[0];
+		if(command[command.size() - 1] == '\n') {
+				command.resize(command.size() - 1);
+
 		}
-		cout << "If passed " << endl;
-		if(token_stream[0] == "copy") {
-			cout << "Calling copy impl " << endl;
-			copy_impl(app, token_stream[1], token_stream[2]);
+
+		if(command == "copy") {
+
+			copy_impl(app, token_stream);
+			app.print_text("                                                                       ");
+			app.set_cursor_position(36, 1, true);
+			app.print_text("Copied successfully.");
+
+		} else if(command == "move") {
+
+			move_impl(app, token_stream);
+			app.print_text("                                                                       ");
+			app.set_cursor_position(36, 1, true);
+			app.print_text("Moved successfully.");
+
+		} else if (command == "rename") {
+
+			rename_impl(token_stream[1], token_stream[2]);
+			app.print_text("                                                                       ");
+			app.set_cursor_position(36, 1, true);
+			app.print_text("Renamed successfully.");
+
+		} else if (command == "delete_file") {
+
+			delete_file_impl(token_stream[1]);
+			app.print_text("                                                                       ");
+			app.set_cursor_position(36, 1, true);
+			app.print_text("Deleted successfully.");
+
+		} else if (command == "delete_dir") {
+
+			delete_directory_impl(token_stream[1]);
+
+		} else if (command == "goto") {
+			
+			enter_into_directory(file_list, app, token_stream[1], "command");
+
+			return;
+
+		} else {
+
+			string temp = ":";
+			string to_print = command + temp;
+			temp = " command not found";
+			to_print = to_print + temp;
+			app.print_text("                                                                       ");
+			app.set_cursor_position(36, 1, true);
+			app.print_text(to_print);
+
 		}
 	}
+
+	enter_in_command_mode(file_list, app);
 }
 
-void enter_in_command_mode(terminal &app) {
+void enter_in_command_mode(vector < tuple < string, string, char > > file_list, terminal &app) {
 
 	app.set_cursor_position(34, 1, true);
 	app.print_text("#######################################################################");
-	app.new_line(); 
+	app.new_line();
+	app.print_text("                                                                       ");
+	app.set_cursor_position(35, 1, true);
 	app.print_text(":");
 
 	string token;
@@ -62,9 +114,8 @@ void enter_in_command_mode(terminal &app) {
 			cout << c;
 
 			if(c == '\n') {
-				token = token + c;
 				token_stream.push_back(token);
-				select_command(app, token_stream);
+				select_command(file_list, app, token_stream);
 				token = "";
 			}
 			else if(c != ' ') {

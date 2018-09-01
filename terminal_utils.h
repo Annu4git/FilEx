@@ -21,4 +21,7 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 
 void clear_terminal();
 
+void enter_into_directory(vector < tuple < string, string, char > > &file_list, 
+	terminal &app, string directory_path, string mode);
+
 #endif

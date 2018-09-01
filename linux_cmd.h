@@ -10,7 +10,15 @@
 
 using namespace std;
 
-void copy_impl(terminal &app, string source_file_path, string destination_file_path);
+void copy_impl(terminal &app, vector <string> token_stream);
+
+void move_impl(terminal &app, vector <string> token_stream);
+
+void rename_impl(string old_file, string new_file);
+
+void delete_file_impl(string file_name);
+
+void delete_directory_impl(string directory_name);
 
 vector < tuple < string, string, char > > ls_impl(bool first_time, terminal &app);
 

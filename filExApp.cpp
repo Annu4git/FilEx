@@ -26,6 +26,7 @@ int main() {
 	app.set_cursor_position();
 
 	app.increment_trace_pointer();
+	
 	app.trace[app.trace_pointer] = app.root_path;
 	
 	hold_terminal(file_list, app);
@@ -33,6 +34,7 @@ int main() {
 	fflush(stdin);
 
 	keyboard_settings_on();
+
 	return 0;	
 }
 
