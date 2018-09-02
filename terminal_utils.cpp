@@ -5,6 +5,8 @@
 #include <string>
 #include <bits/stdc++.h>
 
+#include <sys/wait.h>
+
 #include "terminal_utils.h"
 #include "terminal.h"
 #include "linux_cmd.h"
@@ -30,7 +32,7 @@ struct termios default_settings;
 struct termios custom_settings;
 
 void clear_terminal() {
-	printf("\033[H\033[2J");
+	printf("\033c");
 }
 
 void keyboard_settings_off() {
@@ -80,21 +82,23 @@ string keyboard_handle() {
 	} else if(ch == 'h' || ch == 'H') {
 		input = "ROOT";
 	} else if(ch == 127) {
-		input = "BACKSLASH";
+		input = "BACKSPACE";
 	} 
 
 	return input;
 }
 
-void hold_terminal(vector < tuple < string, string, char > > file_list, terminal &app) {
+void hold_terminal(terminal &app) {
 	int relative_index = 3;
 	while(1) {
 		string input = keyboard_handle();
 		
 		if(input == "COLON") {
-			enter_in_command_mode(file_list, app);
+			enter_in_command_mode(app);
 
 			app.reset_cursor_position();
+
+			input = "";
 
 		}
 
@@ -103,7 +107,7 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 
 			string path = app.root_path;
 			
-			file_list = ls_impl(path, app);	// defined in linux_cmd
+			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 			app.reset_cursor_position();
 
@@ -119,9 +123,9 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 				int local_x = app.cursor_position_x;
 				int local_y = app.cursor_position_y;
 
-				app.reset_cursor_position();
+				// app.reset_cursor_position();
 				
-				file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+				app.current_file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
 
 				app.set_cursor_position(local_x, local_y);
 
@@ -139,9 +143,9 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 					int local_x = app.cursor_position_x;
 					int local_y = app.cursor_position_y;
 
-					app.reset_cursor_position();
+					//app.reset_cursor_position();
 					
-					file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
+					app.current_file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
 
 					app.set_cursor_position(local_x, local_y);
 				}
@@ -149,36 +153,41 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 
 		} else if(input == "LEFT") {
 
-			if(app.trace_pointer != -1) {
-				clear_terminal();
+			if(app.trace_pointer > -1) {
 
 				string path = app.trace[app.trace_pointer];
-				app.decrement_trace_pointer();
-				
-				file_list = ls_impl(path, app);	// defined in linux_cmd
 
-				app.reset_cursor_position();
+				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 				app.current_path = path;
+
+				if(app.trace_pointer > 0) {
+					app.decrement_trace_pointer();
+				}
+			} else {
+				app.increment_trace_pointer();
 			}
 			
 			
 		} else if(input == "RIGHT") {
 
 			if(app.trace[(app.trace_pointer)+1] != "0") {
-				clear_terminal();
-				app.increment_trace_pointer();
+				
 				string path = app.trace[app.trace_pointer];
 				
-				file_list = ls_impl(path, app);	// defined in linux_cmd
-
-				app.reset_cursor_position();
+				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 				app.current_path = path;
+
+				if(app.trace[(app.trace_pointer)+1] != "0") {
+					app.increment_trace_pointer();
+				}
+			} else {
+				app.decrement_trace_pointer();
 			}
 			
 			
-		} else if(input == "BACKSLASH") {
+		} else if(input == "BACKSPACE") {
 
 			int status;
 
@@ -191,11 +200,7 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 			
 			if(status != 0) {
 
-				clear_terminal();
-				
-				file_list = ls_impl(path, app);	// defined in linux_cmd
-
-				app.reset_cursor_position();
+				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 				app.current_path = path;
 
@@ -207,7 +212,7 @@ void hold_terminal(vector < tuple < string, string, char > > file_list, terminal
 		
 		if(input == "ENTER") {
 
-			enter_into_directory(file_list, app, "", "normal");
+			enter_into_directory(app, "", "normal");
 
 			input = "";
 			
@@ -234,36 +239,36 @@ int trim_path(string &path, terminal app) {
 	return 1;
 }
 
-void enter_into_directory(vector < tuple < string, string, char > > &file_list, 
-	terminal &app, string directory_path, string mode) {
-
-	
-
+void enter_into_directory(terminal &app, string directory_path, string mode) {
 
 	int relative_index = 3;
 
-	/*int pid = fork();
-	if (pid == 0) {
-			execl("/usr/bin/xdg-open", "xdg-open", file_list[app.cursor_position_x - relative_index], (char *)0);
+	if(mode == "normal" && get<2>(app.current_file_list[app.cursor_position_x - relative_index]) == '-') {
+
+		string path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
+		//system(("xdg-open " + path).c_str());	
+
+		pid_t pid = fork();
+		if (pid == 0) {
+			execl("/usr/bin/xdg-open", "xdg-open", path.c_str(), (char *)0);
 			exit(1);
-	}*/	
+			wait(NULL);
+		}
+		
+		
+	} else if(mode == "normal" && get<0>(app.current_file_list[app.cursor_position_x - relative_index]) == ".") {
 
-	if(mode == "normal" && get<2>(file_list[app.cursor_position_x - relative_index]) == '-') {
-		system(("xdg-open " + get<1>(file_list[app.cursor_position_x - relative_index])).c_str());	
-		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
-	} else if(mode == "normal" && get<0>(file_list[app.cursor_position_x - relative_index]) == ".") {
-
-		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+		string path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
 
 		trim_path(path, app);
 
 		app.reset_cursor_position();
 		
-	} else if(mode == "normal" && get<0>(file_list[app.cursor_position_x - relative_index]) == "..") {
+	} else if(mode == "normal" && get<0>(app.current_file_list[app.cursor_position_x - relative_index]) == "..") {
 		
 		int status;
 
-		string path = get<1>(file_list[app.cursor_position_x - relative_index]);
+		string path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
 
 		trim_path(path, app);
 		
@@ -273,11 +278,7 @@ void enter_into_directory(vector < tuple < string, string, char > > &file_list,
 
 			app.reset_index_of_first_record_to_be_displayed();
 
-			clear_terminal();
-
-			app.reset_cursor_position();
-
-			file_list = ls_impl(path, app);	// defined in linux_cmd
+			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 			app.current_path = path;
 
@@ -291,7 +292,6 @@ void enter_into_directory(vector < tuple < string, string, char > > &file_list,
 
 			app.decrement_trace_pointer();
 
-			app.reset_cursor_position();
 		}
 		
 	} else {
@@ -300,17 +300,15 @@ void enter_into_directory(vector < tuple < string, string, char > > &file_list,
 		
 		string path;
 
-		if(mode == "command") {
+		if(mode == "command-goto") {
 			path = directory_path;
+		} else if (mode == "command-search") {
+			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
 		} else {
-			path = get<1>(file_list[app.cursor_position_x - relative_index]);
+			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
 		}
-
-		clear_terminal();
-
-		app.reset_cursor_position();
 		
-		file_list = ls_impl(path, app);	// defined in linux_cmd
+		app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 		app.current_path = path;
 
@@ -324,7 +322,17 @@ void enter_into_directory(vector < tuple < string, string, char > > &file_list,
 
 		app.decrement_trace_pointer();
 
-		app.reset_cursor_position();
-
 	}
+}
+
+void debug(terminal &app, string debug_msg) {
+	int local_x = app.cursor_position_x;
+	int local_y = app.cursor_position_y;
+
+	app.set_cursor_position(37, 1, true);
+	app.print_text("                                                                       ");
+	app.set_cursor_position(37, 1, true);
+	app.print_text(debug_msg);
+	getchar();
+	app.set_cursor_position(local_x, local_y);
 }

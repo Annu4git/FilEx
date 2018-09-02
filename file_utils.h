@@ -11,4 +11,6 @@ vector < tuple < string, string, char > > show_and_get_file_list(string s, termi
 
 tuple < string, string, char, string, unsigned int, unsigned int > get_file_by_name_from_current_directory(terminal &app, string given_file_name);
 
+vector < tuple < string, string, char > > get_file_list(string current_directory_path);
+
 #endif

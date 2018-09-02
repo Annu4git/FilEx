@@ -17,11 +17,14 @@ void keyboard_settings_on();
 
 string keyboard_handle();
 
-void hold_terminal(vector < tuple < string, string, char > > file_list, terminal &app);
+void hold_terminal(terminal &app);
 
 void clear_terminal();
 
-void enter_into_directory(vector < tuple < string, string, char > > &file_list, 
-	terminal &app, string directory_path, string mode);
+void enter_into_directory(terminal &app, string directory_path, string mode);
+
+int trim_path(string &path, terminal app);
+
+void debug(terminal &app, string debug_msg);
 
 #endif

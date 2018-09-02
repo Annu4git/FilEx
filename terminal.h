@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <vector>
+#include <tuple>
 
 using namespace std;
 
@@ -27,6 +29,8 @@ public:
 	int total_records_to_be_displayed;
 
 	int total_records_in_current_directory;
+
+	vector < tuple < string, string, char > > current_file_list;
 
 	terminal();
 

@@ -17,19 +17,19 @@ int main() {
 
 	clear_terminal();
 
-	app.reset_cursor_position();
-
 	vector < tuple < string, string, char > >  file_list = ls_impl(true, app);	// defined in linux_cmd
 	
 	app.current_path = app.root_path;
 
+	app.current_file_list = file_list;
+
 	app.set_cursor_position();
 
 	app.increment_trace_pointer();
-	
+
 	app.trace[app.trace_pointer] = app.root_path;
 	
-	hold_terminal(file_list, app);
+	hold_terminal(app);
 
 	fflush(stdin);
 

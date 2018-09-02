@@ -5,6 +5,6 @@
 
 #include "terminal.h"
 
-void enter_in_command_mode(vector < tuple < string, string, char > > file_list, terminal &app);
+string enter_in_command_mode(terminal &app);
 
 #endif
