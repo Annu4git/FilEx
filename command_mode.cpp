@@ -42,7 +42,7 @@ void select_command(terminal &app, vector <string> token_stream) {
 			
 		} else if(command == "copy") {
 
-			copy_impl(app, token_stream);
+			copy_impl(app, token_stream, token_stream[token_stream.size() - 1]);
 			message_to_user = "Copied successfully.";
 
 		} else if(command == "move") {

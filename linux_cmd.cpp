@@ -15,92 +15,173 @@
 
 using namespace std;
 
-void copy_impl(terminal &app, vector <string> token_stream) {
 
-	string seperator = "/";
+void copy_file_to_directory(tuple < string, string, char, string, 
+	unsigned int, unsigned int > file,
+	 string destination_path, terminal &app) {
 
-	string destination_file_location = token_stream[token_stream.size() - 1];
+	string file_name = get<0>(file);
+	string source_file_path = get<1>(file);
+	char file_type = get<2>(file);
+	string permission = get<3>(file);
+	unsigned int own = get<4>(file);
+	unsigned int grp = get<5>(file);
+
+	//string msg = "In copy finally : source_file_path : ";
+	//msg = msg + source_file_path + " and destination_file_path : ";
+	//msg = msg + destination_path;
+	string msg = "Finally" + source_file_path;
+	debug(app, msg);
+
+	string destination_file_path = destination_path + "/" + file_name;
+
+	int source_file_handle, destination_file_handle;
+
+	source_file_handle = open(source_file_path.c_str(), O_RDONLY);
+
+	destination_file_handle = open(destination_file_path.c_str(), O_WRONLY | O_CREAT);
 	
+	char *container[2048];
+
+	int result;
+
+	while( (result = read(source_file_handle, container, 2048) ) > 0) {
+		write(destination_file_handle, container, result);
+	}
+
+	close(destination_file_handle);
+	close(source_file_handle);
+
+	unsigned int user = 0, group = 0, other = 0;
+
+	if(permission[0] == 'r') {
+		user += 4;
+	}
+	if(permission[1] == 'w') {
+		user += 2;
+	}
+	if(permission[2] == 'x') {
+		user += 1;
+	}
+	if(permission[3] == 'r') {
+		group += 4;
+	}
+	if(permission[4] == 'w') {
+		group += 2;
+	}
+	if(permission[5] == 'x') {
+		group += 1;
+	}
+	if(permission[6] == 'r') {
+		other += 4;
+	}
+	if(permission[7] == 'w') {
+		other += 2;
+	}
+	if(permission[8] == 'x') {
+		other += 1;
+	}
+
+	unsigned int all = 100*user + 10*group + other;
+	string prefix = "0000";
+	prefix = prefix + to_string(all);
+	
+	unsigned int permission_number = std::stoul (prefix,nullptr,0);
+	
+	chmod(destination_file_path.c_str(), permission_number);
+
+	if (chown(destination_file_path.c_str(), own, grp) == -1) {
+      	//cout << "User doesn't have permission to change ownership";
+  	}
+}
+
+
+
+void copy_recursively(terminal &app, string source_path, 
+	string source_file_name, string destination_path) {
+
+	string msg = "In copy_recursively, current_directory_path : " + source_path
+	+ " & source_file_name : " + source_file_name + "";
+	debug(app, msg);
+
+	tuple < string, string, char, string, unsigned int, unsigned int > source_file 
+	= get_file_by_name_from_given_directory(app, source_path, source_file_name);
+
+	char source_file_type = get<2>(source_file);
+
+	//string new_current_file_or_directory_path = current_directory_path + "/" +file_name;
+
+	//string new_destination_file_location = destination_file_location + file_name;
+
+	if(source_file_name == "." || source_file_name == "..") {
+		msg = "Ignore for : " + source_file_name;
+		debug(app, msg);
+		return;
+	}
+	if(source_file_type == 'd') {
+
+		string source_directory_name = source_file_name;
+
+		create_dir_impl(app, source_directory_name, destination_path);
+
+		msg = "directory found and with name : " + source_file_name;
+		debug(app, msg);
+		msg = "directory created in : " + destination_path;
+		debug(app, msg);
+
+
+		/* since we found a directory so source path 
+		and destination path will be updated
+		current directory path + / + source directory name
+	 	*/
+		string new_destination_path = destination_path + "/" + source_directory_name;
+		string new_source_path = source_path + "/" + source_directory_name;
+
+		msg = "get files for : " + new_source_path;
+		debug(app, msg);
+
+		vector < tuple < string, string, char > > files_in_directory = 
+		get_file_list(new_source_path);
+
+		msg = "files : " + files_in_directory.size();
+		debug(app, msg);
+
+		for(auto it : files_in_directory) {
+
+			string new_source_file_name = get<0>(it);
+
+			msg = "in files loop, a file found with name : " + new_source_file_name;
+			debug(app, msg);
+
+			copy_recursively(app, new_source_path,
+			new_source_file_name, new_destination_path);
+		}
+
+
+	} else {
+
+		/* if not directory but a file is found we will call our copy function
+			we have destination path and source name along with path
+			that will work
+			1. actual file to be copied, it will have every value needed
+			2. destination path
+			3. app
+		*/
+		copy_file_to_directory(source_file, destination_path, app);
+	}
+}
+
+
+void copy_impl(terminal &app, vector <string> token_stream, 
+	string destination_path) {
+
+	string msg = "In copy impl";
+	debug(app, msg);
+
+	destination_path = app.root_path + "/" + destination_path;
+
 	for(int i = 1; i < token_stream.size() - 1; i++) {
-
-		string source_file_path = token_stream[i];
-
-		tuple < string, string, char, string, unsigned int, unsigned int > file = get_file_by_name_from_current_directory(app, source_file_path);
-
-		string permission = get<3>(file);
-
-		string destination_file_path = destination_file_location;
-
-		destination_file_path = destination_file_path + seperator;
-		destination_file_path = destination_file_path + source_file_path;
-
-		int source_file_handle, destination_file_handle;
-
-		source_file_handle = open(source_file_path.c_str(), O_RDONLY);
-
-		//destFD = open(argv[2],O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-
-		destination_file_handle = open(destination_file_path.c_str(), O_WRONLY | O_CREAT);
-		//destination_file_handle = open(destination_file_path.c_str(), O_WRONLY | O_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-		//destination_file_handle = open(destination_file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-		
-		char *container[2048];
-
-		int result;
-
-		while( (result = read(source_file_handle, container, 2048) ) > 0) {
-			write(destination_file_handle, container, result);
-		}
-
-		close(destination_file_handle);
-		close(source_file_handle);
-
-		unsigned int user = 0, group = 0, other = 0;
-
-		if(permission[0] == 'r') {
-			user += 4;
-		}
-		if(permission[1] == 'w') {
-			user += 2;
-		}
-		if(permission[2] == 'x') {
-			user += 1;
-		}
-		if(permission[3] == 'r') {
-			group += 4;
-		}
-		if(permission[4] == 'w') {
-			group += 2;
-		}
-		if(permission[5] == 'x') {
-			group += 1;
-		}
-		if(permission[6] == 'r') {
-			other += 4;
-		}
-		if(permission[7] == 'w') {
-			other += 2;
-		}
-		if(permission[8] == 'x') {
-			other += 1;
-		}
-
-		unsigned int all = 100*user + 10*group + other;
-		string prefix = "0000";
-		prefix = prefix + to_string(all);
-		
-		unsigned int permission_number = std::stoul (prefix,nullptr,0);
-
-		unsigned int own = get<4>(file);
-
-		unsigned int grp = get<5>(file);
-		
-		chmod(destination_file_path.c_str(), permission_number);
-
-		if (chown(destination_file_path.c_str(), own, grp) == -1) {
-	      	//cout << "User doesn't have permission to change ownership";
-	  	}
+		copy_recursively(app, app.current_path, token_stream[i], destination_path);
 	}
 }
 
@@ -188,6 +269,7 @@ void delete_file_impl(terminal &app, string file_name) {
 }
 
 void delete_directory_impl(terminal &app, string directory_name) {
+
 	vector < tuple < string, string, char > > file_list = get_file_list(directory_name);
 
 	string msg = "Inside delete impl" + directory_name;
