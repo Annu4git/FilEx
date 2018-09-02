@@ -27,12 +27,6 @@ void copy_file_to_directory(tuple < string, string, char, string,
 	unsigned int own = get<4>(file);
 	unsigned int grp = get<5>(file);
 
-	//string msg = "In copy finally : source_file_path : ";
-	//msg = msg + source_file_path + " and destination_file_path : ";
-	//msg = msg + destination_path;
-	string msg = "Finally" + source_file_path;
-	debug(app, msg);
-
 	string destination_file_path = destination_path + "/" + file_name;
 
 	int source_file_handle, destination_file_handle;
@@ -88,21 +82,27 @@ void copy_file_to_directory(tuple < string, string, char, string,
 	
 	unsigned int permission_number = std::stoul (prefix,nullptr,0);
 	
-	chmod(destination_file_path.c_str(), permission_number);
+	struct stat current_stat;
+	stat(source_file_path.c_str(), &current_stat);
 
-	if (chown(destination_file_path.c_str(), own, grp) == -1) {
+    chown(destination_file_path.c_str(), current_stat.st_uid, current_stat.st_gid);   //update owner and group to original file
+    chmod(destination_file_path.c_str(), current_stat.st_mode);   //update the permissions like that of original file
+
+	//chmod(destination_file_path.c_str(), permission_number);
+
+	//msg = file_name + " ";
+	//msg = to_string(permission_number);
+	//debug(app, msg);
+
+	/*if (chown(destination_file_path.c_str(), own, grp) == -1) {
       	//cout << "User doesn't have permission to change ownership";
-  	}
+  	}*/
 }
 
 
 
 void copy_recursively(terminal &app, string source_path, 
 	string source_file_name, string destination_path) {
-
-	string msg = "In copy_recursively, current_directory_path : " + source_path
-	+ " & source_file_name : " + source_file_name + "";
-	debug(app, msg);
 
 	tuple < string, string, char, string, unsigned int, unsigned int > source_file 
 	= get_file_by_name_from_given_directory(app, source_path, source_file_name);
@@ -114,8 +114,6 @@ void copy_recursively(terminal &app, string source_path,
 	//string new_destination_file_location = destination_file_location + file_name;
 
 	if(source_file_name == "." || source_file_name == "..") {
-		msg = "Ignore for : " + source_file_name;
-		debug(app, msg);
 		return;
 	}
 	if(source_file_type == 'd') {
@@ -124,12 +122,6 @@ void copy_recursively(terminal &app, string source_path,
 
 		create_dir_impl(app, source_directory_name, destination_path);
 
-		msg = "directory found and with name : " + source_file_name;
-		debug(app, msg);
-		msg = "directory created in : " + destination_path;
-		debug(app, msg);
-
-
 		/* since we found a directory so source path 
 		and destination path will be updated
 		current directory path + / + source directory name
@@ -137,26 +129,19 @@ void copy_recursively(terminal &app, string source_path,
 		string new_destination_path = destination_path + "/" + source_directory_name;
 		string new_source_path = source_path + "/" + source_directory_name;
 
-		msg = "get files for : " + new_source_path;
-		debug(app, msg);
+		vector < tuple < string, string, char, string, unsigned int, unsigned int > >  
+		files_in_directory = get_file_list(new_source_path, app);
 
-		vector < tuple < string, string, char > > files_in_directory = 
-		get_file_list(new_source_path);
+		if(files_in_directory.size() > 0) {
 
-		msg = "files : " + files_in_directory.size();
-		debug(app, msg);
+			for(auto it : files_in_directory) {
 
-		for(auto it : files_in_directory) {
+				string new_source_file_name = get<0>(it);
 
-			string new_source_file_name = get<0>(it);
-
-			msg = "in files loop, a file found with name : " + new_source_file_name;
-			debug(app, msg);
-
-			copy_recursively(app, new_source_path,
-			new_source_file_name, new_destination_path);
+				copy_recursively(app, new_source_path,
+				new_source_file_name, new_destination_path);
+			}
 		}
-
 
 	} else {
 
@@ -174,9 +159,6 @@ void copy_recursively(terminal &app, string source_path,
 
 void copy_impl(terminal &app, vector <string> token_stream, 
 	string destination_path) {
-
-	string msg = "In copy impl";
-	debug(app, msg);
 
 	destination_path = app.root_path + "/" + destination_path;
 
@@ -199,7 +181,6 @@ void move_impl(terminal &app, vector <string> token_stream) {
 		destination_file_path = destination_file_path + seperator;
 		destination_file_path = destination_file_path + source_file_path;
 
-		debug(app, destination_file_path);
 		rename_impl(app, source_file_path, destination_file_path);
 	}
 
@@ -210,9 +191,6 @@ void rename_impl(terminal &app, string old_file, string new_file) {
 	if(new_file[new_file.size() - 1] == '\n') {
 			new_file.resize(new_file.size() - 1);
 	}
-
-	debug(app, old_file);
-	debug(app, new_file);
 	
 	rename(old_file.c_str(), new_file.c_str());
 }
@@ -259,95 +237,86 @@ void create_dir_impl(terminal &app, string directory_name, string directory_path
 
 void delete_file_impl(terminal &app, string file_name) {
 
-	string msg = "Inside delete impl delete : " + file_name;
-	debug(app, msg);
-
 	int status = remove(file_name.c_str());
 
-	msg = "status : " + status;
-	debug(app, msg);
 }
 
 void delete_directory_impl(terminal &app, string directory_name) {
 
-	vector < tuple < string, string, char > > file_list = get_file_list(directory_name);
-
-	string msg = "Inside delete impl" + directory_name;
-	debug(app, msg);
+	vector < tuple < string, string, char, string, unsigned int, unsigned int > > file_list 
+	= get_file_list(directory_name, app);
 
 	queue < string > directory_queue;
 
-	for(auto it : file_list) {
+	if(file_list.size() > 0) {
 
-		string file_name = get<0>(it);
-		string file_path = get<1>(it);
-		char file_type = get<2>(it);
+		for(auto it : file_list) {
 
-		if(file_type == 'd') {
+			string file_name = get<0>(it);
+			string file_path = get<1>(it);
+			char file_type = get<2>(it);
 
-			if(file_name != "." && file_name != "..") {
-				directory_queue.push(file_path);
+			if(file_type == 'd') {
 
-				msg = "Pushing directory_name : " + get<1>(it);
-				debug(app, msg);
+				if(file_name != "." && file_name != "..") {
+					directory_queue.push(file_path);
+
+				}
+			} else {
+				delete_file_impl(app, file_path);
+				//remove(file_name.c_str());
+
 			}
-		} else {
-			delete_file_impl(app, file_path);
-			//remove(file_name.c_str());
 
-			msg = "removing file _name : " + file_name + " path : " + get<1>(it);
-				debug(app, msg);
-		}
+			while(!directory_queue.empty()) {
+				string directory_to_be_deleted = directory_queue.front();
+				delete_directory_impl(app, directory_to_be_deleted);
 
-		while(!directory_queue.empty()) {
-			string directory_to_be_deleted = directory_queue.front();
-			delete_directory_impl(app, directory_to_be_deleted);
+				delete_file_impl(app, directory_to_be_deleted);
 
-			delete_file_impl(app, directory_to_be_deleted);
+				//remove(directory_to_be_deleted.c_str());
+				directory_queue.pop();
 
-			//remove(directory_to_be_deleted.c_str());
-			directory_queue.pop();
-
-			msg = "removing directory _name : " + directory_to_be_deleted + " path : " + get<1>(it);
-				debug(app, msg);
+			}
 		}
 	}
 
 	delete_file_impl(app, directory_name);
 
-	msg = "finally delete : " + directory_name;
-				debug(app, msg);
 }
 
 void search_impl(terminal &app, string current_directory_path, string search_query, 
-	vector < tuple < string, string, char > > &search_result) {
+	vector < tuple < string, string, char, string, unsigned int, unsigned int > > &search_result) {
 
-	vector < tuple < string, string, char > > file_list = get_file_list(current_directory_path);
+	vector < tuple < string, string, char, string, unsigned int, unsigned int > >
+	 file_list = get_file_list(current_directory_path, app);
 
 	queue < string > directory_queue;
 
-	for(auto it : file_list) {
+	if(file_list.size() > 0) {
+		for(auto it : file_list) {
 
-		char file_type = get<2>(it);
-		string file_name = get<0>(it);
+			char file_type = get<2>(it);
+			string file_name = get<0>(it);
 
-		if(file_type == 'd') {
+			if(file_type == 'd') {
 
-			if(file_name != "." && file_name != "..") {
-				directory_queue.push(get<1>(it));
+				if(file_name != "." && file_name != "..") {
+					directory_queue.push(get<1>(it));
+				}
+			} else {
+
+				size_t found = file_name.find(search_query);
+	  			if (found!=std::string::npos) {
+					search_result.push_back(it);
+	  			}
+				
 			}
-		} else {
 
-			size_t found = file_name.find(search_query);
-  			if (found!=std::string::npos) {
-				search_result.push_back(it);
-  			}
-			
-		}
-
-		while(!directory_queue.empty()) {
-			search_impl(app, directory_queue.front(), search_query, search_result);
-			directory_queue.pop();
+			while(!directory_queue.empty()) {
+				search_impl(app, directory_queue.front(), search_query, search_result);
+				directory_queue.pop();
+			}
 		}
 	}
 }
@@ -362,7 +331,8 @@ void traverse_impl(terminal &app, string current_directory_path,
 		count = 1;
 	}
 
-	vector < tuple < string, string, char > > file_list = get_file_list(current_directory_path);
+	vector < tuple < string, string, char, string, unsigned int, unsigned int > >
+	 file_list = get_file_list(current_directory_path, app);
 
 	queue < string > directory_queue;
 
@@ -372,29 +342,32 @@ void traverse_impl(terminal &app, string current_directory_path,
 
 	int line_counter = 1;
 
-	for(auto it : file_list) {
+	if(file_list.size() > 0) {
 
-		if(line_counter == 5) {
-			fprintf(file, "%s\n");
-			line_counter = 1;
-		}
+		for(auto it : file_list) {
 
-		char file_type = get<2>(it);
-
-		if(file_type == 'd') {
-			string file_name = get<0>(it);
-			if(file_name != "." && file_name != ".." && file_name[0] != '.') {
-				directory_queue.push(get<1>(it));
-				fprintf(file, "%s\t", file_name.c_str());
-				line_counter++;
+			if(line_counter == 5) {
+				fprintf(file, "%s\n");
+				line_counter = 1;
 			}
-		} else {
 
-			string file_name = get<0>(it);
-			if(file_name[0] != '.') {
-				fprintf(file, "%s\t", file_name.c_str());
-				line_counter++;
-			}	
+			char file_type = get<2>(it);
+
+			if(file_type == 'd') {
+				string file_name = get<0>(it);
+				if(file_name != "." && file_name != ".." && file_name[0] != '.') {
+					directory_queue.push(get<1>(it));
+					fprintf(file, "%s\t", file_name.c_str());
+					line_counter++;
+				}
+			} else {
+
+				string file_name = get<0>(it);
+				if(file_name[0] != '.') {
+					fprintf(file, "%s\t", file_name.c_str());
+					line_counter++;
+				}	
+			}
 		}
 	}
 
@@ -410,8 +383,8 @@ void traverse_impl(terminal &app, string current_directory_path,
 void snapshot_impl(terminal &app, string directory_path_and_name, string dumpl_file_name) {
 	
 	dumpl_file_name = app.root_path + "/" + dumpl_file_name;
+	directory_path_and_name = app.current_path + "/" + directory_path_and_name;
 	traverse_impl(app, directory_path_and_name, dumpl_file_name, 0);
-
 }
 
 

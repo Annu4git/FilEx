@@ -97,6 +97,8 @@ void select_command(terminal &app, vector <string> token_stream) {
 
 		} else if(command == "snapshot") {
 
+			//string directory_path_and_name = 
+
 			snapshot_impl(app, token_stream[1], token_stream[2]);
 
 			message_to_user = "Snapshoting done.";

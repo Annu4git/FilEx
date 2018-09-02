@@ -26,7 +26,7 @@ void delete_file_impl(terminal &app, string file_name);
 void delete_directory_impl(terminal &app, string directory_name);
 
 void search_impl(terminal &app, string current_directory_path, string search_query, 
-	vector < tuple < string, string, char > > &search_result);
+	vector < tuple < string, string, char, string, unsigned int, unsigned int > > &search_result);
 
 void snapshot_impl(terminal &app, string directory_path_and_name, string dumpl_file_name);
 
