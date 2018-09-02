@@ -34,34 +34,12 @@ void select_command(terminal &app, vector <string> token_stream) {
 		if(command == "search") {
 			vector < tuple < string, string, char > > search_result;
 			string search_query = token_stream[1];
-			search_impl(app, app.current_path, search_query, search_result);
+			//search_impl(app, app.current_path, search_query, search_result);
 
-			if(search_result.size() > 0) {
+			enter_into_directory(app, app.current_path, "command-search", search_query);
 
-				clear_terminal();
-
-				app.set_cursor_position(1, 1);
-
-				string file_title = "File / Directory";
-				string size_title = "Size";
-				string owner_title = "Owner";
-				string group_title = "Group";
-				string permissions_title = "Permissions";
-				string last_modified_title = "Last Modified";
-
-				cout << file_title << "              " << size_title << "       "
-				<< owner_title << "  " << group_title << "     "
-				<< permissions_title << "  " << last_modified_title ;
-
-				app.reset_cursor_position();
-
-				for (auto it : search_result) {
-					cout << get<1>(it) << endl;
-				}
-
-				app.reset_cursor_position();
-
-			}
+			return;
+			
 		} else if(command == "copy") {
 
 			copy_impl(app, token_stream);
@@ -89,13 +67,15 @@ void select_command(terminal &app, vector <string> token_stream) {
 
 		} else if (command == "delete_file") {
 
-			delete_file_impl(app, token_stream[1]);
-			message_to_user = "Deleted successfully.";
+			string file_to_be_deleted = app.current_path + "/" + token_stream[1];
+			delete_file_impl(app, file_to_be_deleted);
+			message_to_user = "File deleted successfully.";
 
 		} else if (command == "delete_dir") {
 
-			delete_directory_impl(app, token_stream[1]);
-			message_to_user = "Deleted successfully.";
+			string directory_to_be_deleted = app.current_path + "/" + token_stream[1];
+			delete_directory_impl(app, directory_to_be_deleted);
+			message_to_user = "Directory deleted successfully.";
 
 		} else if (command == "goto") {
 
@@ -111,7 +91,7 @@ void select_command(terminal &app, vector <string> token_stream) {
 			
 			directory_path = get_absolute_path(app, directory_path);
 
-			enter_into_directory(app, directory_path, "command-goto");
+			enter_into_directory(app, directory_path, "command-goto", "");
 
 			return;
 
@@ -196,7 +176,7 @@ string enter_in_command_mode(terminal &app) {
 					
 					select_command(app, token_stream);
 					
-					if(token_stream[0] == "goto") {
+					if(command == "goto" || command == "search") {
 						start_new_command = 0;
 						return "";
 					}

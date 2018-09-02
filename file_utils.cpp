@@ -162,7 +162,7 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 			cout << " ";
 
 			char date[10];
-			strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_ctime)));
+			strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_mtime)));
 
 			// stat(qualified_file_name.c_str(), current_time);
 			// cout << ctime(*current_time.st_mtime);
@@ -180,8 +180,8 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 	return file_list;
 }
 
-tuple < string, string, char, string, unsigned int, unsigned int > get_file_by_name_from_current_directory(terminal &app, 
-	string given_file_name) {
+tuple < string, string, char, string, unsigned int, unsigned int > 
+get_file_by_name_from_current_directory(terminal &app, string given_file_name) {
 
 	string current_directory_path = get_current_directory_path();
 	
@@ -292,7 +292,7 @@ vector < tuple < string, string, char > > get_file_list(string current_directory
 }
 
 vector < tuple < string, string, char > > show_and_get_file_list_with_search(string current_directory_path, 
-	terminal &app) {
+	terminal &app, string search_query) {
 
 	clear_terminal();
 
@@ -324,18 +324,22 @@ vector < tuple < string, string, char > > show_and_get_file_list_with_search(str
 
 	int number_of_records = scandir(current_directory_path.c_str(), &files, NULL, alphasort);
 
-	app.total_records_in_current_directory = number_of_records;
+	//app.total_records_in_current_directory = number_of_records;
 
 	int i = app.index_of_first_record_to_be_displayed;
-	int total_records_to_show = app.index_of_first_record_to_be_displayed + app.total_records_to_be_displayed;
+	int total_records_to_show = app.index_of_first_record_to_be_displayed 
+	+ app.total_records_to_be_displayed;
 
 	if(i < number_of_records && i > -1) {
 
 		for(; i < total_records_to_show && i < number_of_records; i++) {
 
 			string file_name = files[i]->d_name;
-
-			string qualified_file_name = current_directory_path;
+		
+			size_t found = file_name.find(search_query);
+  			if (found!=std::string::npos) {
+				
+  				string qualified_file_name = current_directory_path;
 			string seprator = "/";
 
 			qualified_file_name = qualified_file_name + seprator;
@@ -405,10 +409,11 @@ vector < tuple < string, string, char > > show_and_get_file_list_with_search(str
 			 cout << date;
 
 			cout << endl;
+
+  			}
+		
 		}
-	} else {
-		cout << app.index_of_first_record_to_be_displayed;
-	}	
+	} 	
 
 	app.reset_cursor_position();
 

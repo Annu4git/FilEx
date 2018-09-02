@@ -212,7 +212,7 @@ void hold_terminal(terminal &app) {
 		
 		if(input == "ENTER") {
 
-			enter_into_directory(app, "", "normal");
+			enter_into_directory(app, "", "normal", "");
 
 			input = "";
 			
@@ -239,7 +239,7 @@ int trim_path(string &path, terminal app) {
 	return 1;
 }
 
-void enter_into_directory(terminal &app, string directory_path, string mode) {
+void enter_into_directory(terminal &app, string directory_path, string mode, string search_query) {
 
 	int relative_index = 3;
 
@@ -302,13 +302,19 @@ void enter_into_directory(terminal &app, string directory_path, string mode) {
 
 		if(mode == "command-goto") {
 			path = directory_path;
+			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+
 		} else if (mode == "command-search") {
-			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
+			path = directory_path;
+			app.current_file_list = ls_impl_with_search(path, app, search_query);	// defined in linux_cmd
+
 		} else {
 			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
+			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+
 		}
 		
-		app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+		
 
 		app.current_path = path;
 

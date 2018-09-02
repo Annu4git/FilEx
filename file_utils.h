@@ -13,4 +13,7 @@ tuple < string, string, char, string, unsigned int, unsigned int > get_file_by_n
 
 vector < tuple < string, string, char > > get_file_list(string current_directory_path);
 
+vector < tuple < string, string, char > > show_and_get_file_list_with_search(string current_directory_path, 
+	terminal &app, string search_query);
+
 #endif

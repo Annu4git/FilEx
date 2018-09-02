@@ -33,6 +33,9 @@ vector < tuple < string, string, char > > ls_impl(bool first_time, terminal &app
 
 vector < tuple < string, string, char > > ls_impl(string current_directory_path, terminal &app);
 
+vector < tuple < string, string, char > > ls_impl_with_search(string current_directory_path, 
+	terminal &app, string search_query);
+
 string get_absolute_path(terminal &app, string path);
 
 #endif

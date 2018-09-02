@@ -177,11 +177,64 @@ void create_dir_impl(terminal &app, string directory_name, string directory_path
 
 
 void delete_file_impl(terminal &app, string file_name) {
-	remove(file_name.c_str());
+
+	string msg = "Inside delete impl delete : " + file_name;
+	debug(app, msg);
+
+	int status = remove(file_name.c_str());
+
+	msg = "status : " + status;
+	debug(app, msg);
 }
 
 void delete_directory_impl(terminal &app, string directory_name) {
+	vector < tuple < string, string, char > > file_list = get_file_list(directory_name);
 
+	string msg = "Inside delete impl" + directory_name;
+	debug(app, msg);
+
+	queue < string > directory_queue;
+
+	for(auto it : file_list) {
+
+		string file_name = get<0>(it);
+		string file_path = get<1>(it);
+		char file_type = get<2>(it);
+
+		if(file_type == 'd') {
+
+			if(file_name != "." && file_name != "..") {
+				directory_queue.push(file_path);
+
+				msg = "Pushing directory_name : " + get<1>(it);
+				debug(app, msg);
+			}
+		} else {
+			delete_file_impl(app, file_path);
+			//remove(file_name.c_str());
+
+			msg = "removing file _name : " + file_name + " path : " + get<1>(it);
+				debug(app, msg);
+		}
+
+		while(!directory_queue.empty()) {
+			string directory_to_be_deleted = directory_queue.front();
+			delete_directory_impl(app, directory_to_be_deleted);
+
+			delete_file_impl(app, directory_to_be_deleted);
+
+			//remove(directory_to_be_deleted.c_str());
+			directory_queue.pop();
+
+			msg = "removing directory _name : " + directory_to_be_deleted + " path : " + get<1>(it);
+				debug(app, msg);
+		}
+	}
+
+	delete_file_impl(app, directory_name);
+
+	msg = "finally delete : " + directory_name;
+				debug(app, msg);
 }
 
 void search_impl(terminal &app, string current_directory_path, string search_query, 
@@ -286,18 +339,25 @@ vector < tuple < string, string, char > > ls_impl(bool first_time, terminal &app
 	app.root_path = current_directory_path; /* only sets first time*/
 	char current_working_directory[current_directory_path.length()+1]; 
     strcpy(current_working_directory, current_directory_path.c_str()); 
-	vector < tuple < string, string, char > > file_list = show_and_get_file_list(current_working_directory, app);
+	vector < tuple < string, string, char > > file_list = 
+	show_and_get_file_list(current_working_directory, app);
 	
 	return file_list;
 }
 
 vector < tuple < string, string, char > > ls_impl(string current_directory_path, terminal &app) {
 
-	//char current_working_directory[current_directory_path.length()+1]; 
-    //strcpy(current_working_directory, current_directory_path.c_str()); 
-	vector < tuple < string, string, char  > > file_list = show_and_get_file_list(current_directory_path, app);
+	vector < tuple < string, string, char  > > file_list = 
+	show_and_get_file_list(current_directory_path, app);
 
-	//fflush(stdin);
+	return file_list;
+}
+
+vector < tuple < string, string, char > > ls_impl_with_search(string current_directory_path, 
+	terminal &app, string search_query) {
+
+	vector < tuple < string, string, char  > > file_list = 
+	show_and_get_file_list_with_search(current_directory_path, app, search_query);
 
 	return file_list;
 }
