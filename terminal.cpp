@@ -25,8 +25,6 @@ terminal::terminal() {
 
 	index_of_first_record_to_be_displayed = 0;
 
-	total_records_to_be_displayed = 30;
-
 	total_records_in_current_directory = 0;
 
 	ioctl(0,TIOCGWINSZ, & terminal_size);
@@ -42,6 +40,8 @@ void terminal::set_window_parameters() {
 	fence_row_no = terminal_row-2;
 	command_row_no = terminal_row -1;
 	message_row_no = terminal_row;
+
+	total_records_to_be_displayed = terminal_row - 6;
 }
 
 void terminal::reset_index_of_first_record_to_be_displayed() {
@@ -56,7 +56,7 @@ void terminal::reset_cursor_position() {
 
 void terminal::set_cursor_position() {
 	if(cursor_position_x > 2 && cursor_position_x < (total_records_in_current_directory + 3) 
-		&& cursor_position_x < 33 && cursor_position_y > 0) {
+		&& cursor_position_x < (total_records_to_be_displayed + 3) && cursor_position_y > 0) {
 		printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
 	}
 }
@@ -65,7 +65,7 @@ void terminal::set_cursor_position(int x, int y) {
 	cursor_position_x = x;
 	cursor_position_y = y;
 	if(cursor_position_x > 2 && cursor_position_x < (total_records_in_current_directory + 3) 
-		&& cursor_position_x < 33 && cursor_position_y > 0) {
+		&& cursor_position_x < (total_records_to_be_displayed + 3) && cursor_position_y > 0) {
 		printf("\033[%d;%dH", cursor_position_x, cursor_position_y);
 	}
 }
@@ -82,7 +82,8 @@ int terminal::move_cursor_up() {
 }
 
 int terminal::move_cursor_down() {
-	if(cursor_position_x < 32 && cursor_position_x < (total_records_in_current_directory + 2)) {
+	if(cursor_position_x < (total_records_to_be_displayed + 2) 
+		&& cursor_position_x < (total_records_in_current_directory + 2)) {
 		cursor_position_x ++ ;
 		set_cursor_position();
 		return 0;

@@ -106,7 +106,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if(command == "move") {
 
 			if(token_stream.size() < 3) {
-				message_to_user = "Error: Too few arguments found! Try something like : move foo.txt bar.txt baz.mp4 ~/foobar";
+				message_to_user = error_msg + too_few_args + "move foo.txt bar.txt baz.mp4 ~/foobar";
 			} else {
 				string destination_path = token_stream[token_stream.size() - 1];
 				destination_path = get_absolute_path_for_file(app, destination_path);
@@ -118,7 +118,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if  (command == "rename") {
 
 			if(token_stream.size() < 3) {
-				message_to_user = "Error: Too few arguments found! Try something like : rename foo.txt bar.txt";
+				message_to_user = error_msg + too_few_args + "rename foo.txt bar.txt";
 			} else {
 
 				string old_name = get_absolute_path_for_file(app, token_stream[1]);
@@ -132,7 +132,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if (command == "create_file") {
 
 			if(token_stream.size() < 3) {
-				message_to_user = "Error: Too few arguments found! Try something like : create_file foo.txt ~/foobar";
+				message_to_user = error_msg + too_few_args + "create_file foo.txt ~/foobar";
 			} else {
 
 				string file_to_be_created = token_stream[1];
@@ -145,7 +145,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if (command == "create_dir") {
 
 			if(token_stream.size() < 3) {
-				message_to_user = "Error: Too few arguments found! Try something like : create_dir folder_name ~/foobar";
+				message_to_user = error_msg + too_few_args + "create_dir folder_name ~/foobar";
 			} else {
 
 				string directory_to_be_created = token_stream[1];
@@ -157,7 +157,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if (command == "delete_file") {
 
 			if(token_stream.size() < 2) {
-				message_to_user = "Error: Too few arguments found! Try something like : delete_file <file_path>";
+				message_to_user = error_msg + too_few_args + "delete_file <file_path>";
 			} else {
 
 				string file_to_be_deleted = token_stream[1];
@@ -169,7 +169,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if (command == "delete_dir") {
 
 			if(token_stream.size() < 2) {
-				message_to_user = "Error: Too few arguments found! Try something like : delete_dir <directory_path>";
+				message_to_user = error_msg + too_few_args + "delete_dir <directory_path>";
 			} else {
 
 				string directory_to_be_deleted = token_stream[1];
@@ -181,7 +181,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if (command == "goto") {
 
 			if(token_stream.size() < 2) {
-				message_to_user = "Error: Too few arguments found! Try something like : goto <directory_path>";
+				message_to_user = error_msg + too_few_args + "goto <directory_path>";
 			} else {
 
 				string directory_path = token_stream[1];
@@ -193,12 +193,8 @@ int select_command(terminal &app, vector <string> token_stream) {
 				} else {
 					directory_path = app.root_path + "/" + directory_path ;
 				}
-
-				debug(app, directory_path);
 				
 				directory_path = get_absolute_path(app, directory_path);
-
-				debug(app, directory_path);
 
 				enter_into_directory(app, directory_path, "command-goto", "");
 
@@ -214,7 +210,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 			app.search_results = 0;
 
 			if(token_stream.size() < 2) {
-				message_to_user = "Error: Too few arguments found! Try something like : search <filename>";
+				message_to_user = error_msg + too_few_args + "search <filename>";
 			} else {
 
 				vector < tuple < string, string, char > > search_result;
@@ -224,9 +220,16 @@ int select_command(terminal &app, vector <string> token_stream) {
 
 				if(searched_list.size() == 0) {
 					message_to_user = "No results found!";
+
+					print_message(app, message_to_user);
+					return -1;
+				} else {
+					message_to_user = "Match(es) found!";
+
+					print_message(app, message_to_user);
+					return 0;
 				}
-				print_message(app, message_to_user);
-				return -1;
+				
 			}
 
 			
@@ -234,7 +237,7 @@ int select_command(terminal &app, vector <string> token_stream) {
 		} else if(command == "snapshot") {
 
 			if(token_stream.size() < 3) {
-				message_to_user = "Error: Too few arguments found! Try something like : snapshot <folder> <dumpfile>";
+				message_to_user = error_msg + too_few_args + "snapshot <folder> <dumpfile>";
 			} else {
 
 				snapshot_impl(app, token_stream[1], token_stream[2]);
@@ -313,7 +316,7 @@ string enter_in_command_mode(terminal &app) {
 						if(status == -1) {
 
 						} else {
-							return "";
+							return "command-return-from-search";
 						}
 
 					} else if(command == "goto") {

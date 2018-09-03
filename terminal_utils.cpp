@@ -89,12 +89,16 @@ string keyboard_handle() {
 }
 
 void hold_terminal(terminal &app) {
+	
 	int relative_index = 3;
+	
+	string result_from_command_mode;
+
 	while(1) {
 		string input = keyboard_handle();
-		
+
 		if(input == "COLON") {
-			enter_in_command_mode(app);
+			result_from_command_mode = enter_in_command_mode(app);
 
 			app.reset_cursor_position();
 
@@ -144,7 +148,7 @@ void hold_terminal(terminal &app) {
 					int local_y = app.cursor_position_y;
 					
 					app.current_file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
-
+					//debug(app, "this is fine");
 					app.set_cursor_position(local_x, local_y);
 				}
 			}
@@ -196,6 +200,11 @@ void hold_terminal(terminal &app) {
 				app.increment_trace_pointer();
 
 				app.trace[app.trace_pointer] = path;
+			}
+
+			if(result_from_command_mode == "command-return-from-search") {
+				enter_into_directory(app, app.current_path, "normal", "");
+				result_from_command_mode = "";
 			}
 		}
 		
@@ -309,6 +318,7 @@ vector < tuple < string, string, char > > enter_into_directory(terminal &app, st
 		if(mode == "command-goto") {
 			path = directory_path;
 			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+			mode = "normal";
 
 		} else if (mode == "command-search") {
 			path = directory_path;
@@ -322,10 +332,15 @@ vector < tuple < string, string, char > > enter_into_directory(terminal &app, st
 
 				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
-				
 			}
 
 			return searched_list;
+
+		} else if(mode == "command-return-from-search") {
+
+			path = directory_path;
+			app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+			mode = "normal";
 
 		} else {
 			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
@@ -356,9 +371,14 @@ void debug(terminal &app, string debug_msg) {
 	int local_x = app.cursor_position_x;
 	int local_y = app.cursor_position_y;
 
-	app.set_cursor_position(37, 1, true);
-	app.print_text("                                                                       ");
-	app.set_cursor_position(37, 1, true);
+	string print_space = "";
+	app.set_cursor_position(app.message_row_no, 1, true);
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+	app.print_text(print_space);
+
+	app.set_cursor_position(app.message_row_no, 1, true);
 	app.print_text(debug_msg);
 	getchar();
 	app.set_cursor_position(local_x, local_y);

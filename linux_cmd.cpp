@@ -210,9 +210,6 @@ void create_file_impl(terminal &app, string file_name, string directory_path) {
 	destination_file_path = destination_file_path + seperator;
 	destination_file_path = destination_file_path + file_name;
 
-	string msg = "destination_file_path : " + destination_file_path; 
-	debug(app, msg);
-
 	int destination_file_handle = open(destination_file_path.c_str(),O_WRONLY | O_CREAT | O_TRUNC, 
 		S_IRUSR | S_IWUSR | S_IRGRP |S_IWGRP | S_IROTH | S_IWOTH);
 

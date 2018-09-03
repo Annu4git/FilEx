@@ -17,7 +17,7 @@ int main() {
 
 	clear_terminal();
 
-	//app.set_window_parameters();
+	app.set_window_parameters();
 
 	vector < tuple < string, string, char > >  file_list = ls_impl(true, app);	// defined in linux_cmd
 	
