@@ -54,8 +54,11 @@ void print_size(size_t file_size, terminal &app) {
 	} else {
 		cout << file_size << " " << unit << " ";
 	}
+
+	fflush(stdout);
 }
 
+/* most important function to display list */
 vector < tuple < string, string, char > > show_and_get_file_list(string current_directory_path, 
 	terminal &app) {
 
@@ -158,28 +161,27 @@ vector < tuple < string, string, char > > show_and_get_file_list(string current_
 
 			cout << "  " << permissions << "  ";
 
-			//cout << " " << localtime(&(current_stat.st_ctime));
 			cout << " ";
 
 			char date[10];
 			strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_mtime)));
 
-			// stat(qualified_file_name.c_str(), current_time);
-			// cout << ctime(*current_time.st_mtime);
-
 			 cout << date;
 
 			cout << endl;
+
+			fflush(stdout);
 		}
-	} else {
-		cout << app.index_of_first_record_to_be_displayed;
-	}	
+	}
 
 	app.reset_cursor_position();
+
+	fflush(stdout);
 
 	return file_list;
 }
 
+/* not using now */
 tuple < string, string, char, string, unsigned int, unsigned int > 
 get_file_by_name_from_current_directory(terminal &app, string given_file_name) {
 
@@ -254,6 +256,7 @@ get_file_by_name_from_current_directory(terminal &app, string given_file_name) {
 	}
 }
 
+/* for copy command : copy recursively */
 tuple < string, string, char, string, unsigned int, unsigned int > 
 	get_file_by_name_from_given_directory(terminal &app, 
 	string current_directory_path, string given_file_name) {
@@ -324,7 +327,7 @@ tuple < string, string, char, string, unsigned int, unsigned int >
 	}
 }
 
-
+/* returns file list and not show them */
 vector < tuple < string, string, char, string, unsigned int, unsigned int > > 
 get_file_list(string current_directory_path, terminal &app) {
 
@@ -388,6 +391,9 @@ get_file_list(string current_directory_path, terminal &app) {
 	return file_list;
 }
 
+
+/* for search command only*/
+/* displays file search result */
 vector < tuple < string, string, char > > show_and_get_file_list_with_search(string current_directory_path, 
 	terminal &app, string search_query) {
 
@@ -396,15 +402,10 @@ vector < tuple < string, string, char > > show_and_get_file_list_with_search(str
 	app.set_cursor_position(1, 1);
 
 	string file_title = "File / Directory";
-	string size_title = "Size";
-	string owner_title = "Owner";
-	string group_title = "Group";
-	string permissions_title = "Permissions";
-	string last_modified_title = "Last Modified";
 
-	cout << file_title << "              " << size_title << "       "
-	<< owner_title << "  " << group_title << "     "
-	<< permissions_title << "  " << last_modified_title ;
+	cout << file_title ;
+
+	fflush(stdout);
 
 	app.reset_cursor_position();
 
@@ -413,104 +414,51 @@ vector < tuple < string, string, char > > show_and_get_file_list_with_search(str
 	struct dirent **files;
 	struct stat current_stat;
 	struct stat *current_time;
-	struct passwd *pw;
-	struct group  *gr;
 
 	/* to store file in a tuple list */
 	vector < tuple < string, string, char > > file_list;
 
 	int number_of_records = scandir(current_directory_path.c_str(), &files, NULL, alphasort);
 
-	//app.total_records_in_current_directory = number_of_records;
+	for(int i = 0; i < number_of_records; i++) {
 
-	int i = app.index_of_first_record_to_be_displayed;
-	int total_records_to_show = app.index_of_first_record_to_be_displayed 
-	+ app.total_records_to_be_displayed;
+		string file_name = files[i]->d_name;
+	
+		if (file_name == search_query) {
 
-	if(i < number_of_records && i > -1) {
-
-		for(; i < total_records_to_show && i < number_of_records; i++) {
-
-			string file_name = files[i]->d_name;
+		app.search_results = app.search_results + 1;
 		
-			size_t found = file_name.find(search_query);
-  			if (found!=std::string::npos) {
-				
-  				string qualified_file_name = current_directory_path;
-			string seprator = "/";
+		string qualified_file_name = current_directory_path;
+		string seprator = "/";
 
-			qualified_file_name = qualified_file_name + seprator;
-			qualified_file_name = qualified_file_name + file_name;
+		qualified_file_name = qualified_file_name + seprator;
+		qualified_file_name = qualified_file_name + file_name;
 
-			stat(file_name.c_str(), &current_stat);
+		stat(file_name.c_str(), &current_stat);
 
-			if(file_name.size() > 30) {
-				cout << file_name.substr(0, 25) << "...  ";
-			} else if(file_name.size() < 30) {
-				int remaining = 30 - file_name.size();
-				cout << file_name;
-				while(remaining--) {
-					cout << " ";
-				}
+		if(file_name.size() > 30) {
+			cout << file_name.substr(0, 25) << "...  ";
+		} else if(file_name.size() < 30) {
+			int remaining = 30 - file_name.size();
+			cout << file_name;
+			while(remaining--) {
+				cout << " ";
 			}
-
-			print_size(current_stat.st_size, app);
-
-			pw = getpwuid(current_stat.st_uid);
-			gr = getgrgid(current_stat.st_gid);
-
-			cout << pw->pw_name << " " << gr->gr_name << " ";
-
-			char is_directory = (files[i]->d_type == DT_DIR) ? 'd' : '-';
-
-			char is_read_permission_for_user = (current_stat.st_mode & S_IRUSR) ? 'r' : '-';
-			char is_write_permission_for_user = (current_stat.st_mode & S_IWUSR) ? 'w' : '-';
-			char is_execute_permission_for_user = (current_stat.st_mode & S_IXUSR) ? 'x' : '-';
-
-			char is_read_permission_for_group = (current_stat.st_mode & S_IRGRP) ? 'r' : '-';
-			char is_write_permission_for_group = (current_stat.st_mode & S_IWGRP) ? 'w' : '-';
-			char is_execute_permission_for_group = (current_stat.st_mode & S_IXGRP) ? 'x' : '-';
-
-			char is_read_permission_for_others = (current_stat.st_mode & S_IROTH) ? 'r' : '-';
-			char is_write_permission_for_others = (current_stat.st_mode & S_IWOTH) ? 'w' : '-';
-			char is_execute_permission_for_others = (current_stat.st_mode & S_IXOTH) ? 'x' : '-';
-			
-			cout << is_directory << " ";
-
-			string permissions = "";
-			permissions = permissions + is_read_permission_for_user;
-			permissions = permissions + is_write_permission_for_user;
-			permissions = permissions + is_execute_permission_for_user;
-
-			permissions = permissions + is_read_permission_for_group;
-			permissions = permissions + is_write_permission_for_group;
-			permissions = permissions + is_execute_permission_for_group;
-
-			permissions = permissions + is_read_permission_for_others;
-			permissions = permissions + is_write_permission_for_others;
-			permissions = permissions + is_execute_permission_for_others;
-
-			file_list.push_back(make_tuple(file_name, qualified_file_name, is_directory));
-
-			cout << "  " << permissions << "  ";
-
-			//cout << " " << localtime(&(current_stat.st_ctime));
-			cout << " ";
-
-			char date[10];
-			strftime(date, 20, "%d-%m-%y", localtime(&(current_stat.st_ctime)));
-
-			// stat(qualified_file_name.c_str(), current_time);
-			// cout << ctime(*current_time.st_mtime);
-
-			 cout << date;
-
-			cout << endl;
-
-  			}
-		
 		}
-	} 	
+
+		char is_directory = (files[i]->d_type == DT_DIR) ? 'd' : '-';
+
+		file_list.push_back(make_tuple(file_name, qualified_file_name, is_directory));
+
+		cout << endl;
+
+		fflush(stdout);
+
+		}
+	
+	}
+
+	fflush(stdout);
 
 	app.reset_cursor_position();
 

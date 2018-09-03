@@ -142,8 +142,6 @@ void hold_terminal(terminal &app) {
 					clear_terminal();
 					int local_x = app.cursor_position_x;
 					int local_y = app.cursor_position_y;
-
-					//app.reset_cursor_position();
 					
 					app.current_file_list = ls_impl(app.current_path, app);	// defined in linux_cmd
 
@@ -153,7 +151,9 @@ void hold_terminal(terminal &app) {
 
 		} else if(input == "LEFT") {
 
-			if(app.trace_pointer > -1) {
+			if(app.trace_pointer > 0) {
+
+				app.decrement_trace_pointer();
 
 				string path = app.trace[app.trace_pointer];
 
@@ -161,31 +161,20 @@ void hold_terminal(terminal &app) {
 
 				app.current_path = path;
 
-				if(app.trace_pointer > 0) {
-					app.decrement_trace_pointer();
-				}
-			} else {
-				app.increment_trace_pointer();
 			}
-			
 			
 		} else if(input == "RIGHT") {
 
 			if(app.trace[(app.trace_pointer)+1] != "0") {
+
+				app.increment_trace_pointer();
 				
 				string path = app.trace[app.trace_pointer];
 				
 				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 
 				app.current_path = path;
-
-				if(app.trace[(app.trace_pointer)+1] != "0") {
-					app.increment_trace_pointer();
-				}
-			} else {
-				app.decrement_trace_pointer();
 			}
-			
 			
 		} else if(input == "BACKSPACE") {
 
@@ -253,9 +242,11 @@ int trim_path_from_left(string &path, terminal app) {
 	return 1;
 }
 
-void enter_into_directory(terminal &app, string directory_path, string mode, string search_query) {
+vector < tuple < string, string, char > > enter_into_directory(terminal &app, string directory_path, string mode, string search_query) {
 
 	int relative_index = 3;
+
+	vector < tuple < string, string, char > > list;
 
 	if(mode == "normal" && get<2>(app.current_file_list[app.cursor_position_x - relative_index]) == '-') {
 
@@ -270,13 +261,14 @@ void enter_into_directory(terminal &app, string directory_path, string mode, str
 		}
 		
 		
-	} else if(mode == "normal" && get<0>(app.current_file_list[app.cursor_position_x - relative_index]) == ".") {
+	} else if(mode == "normal" && 
+		get<0>(app.current_file_list[app.cursor_position_x - relative_index]) == ".") {
 
-		string path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
+		string path = app.current_path;
 
-		trim_path(path, app);
+		app.reset_index_of_first_record_to_be_displayed();
 
-		app.reset_cursor_position();
+		app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
 		
 	} else if(mode == "normal" && get<0>(app.current_file_list[app.cursor_position_x - relative_index]) == "..") {
 		
@@ -320,7 +312,20 @@ void enter_into_directory(terminal &app, string directory_path, string mode, str
 
 		} else if (mode == "command-search") {
 			path = directory_path;
-			app.current_file_list = ls_impl_with_search(path, app, search_query);	// defined in linux_cmd
+			vector < tuple < string, string, char > > searched_list 
+			= ls_impl_with_search(path, app, search_query);	// defined in linux_cmd
+
+			if(searched_list.size() == 0) {
+				string path = app.current_path;
+
+				app.reset_index_of_first_record_to_be_displayed();
+
+				app.current_file_list = ls_impl(path, app);	// defined in linux_cmd
+
+				
+			}
+
+			return searched_list;
 
 		} else {
 			path = get<1>(app.current_file_list[app.cursor_position_x - relative_index]);
@@ -329,20 +334,22 @@ void enter_into_directory(terminal &app, string directory_path, string mode, str
 		}
 		
 		
+		if(mode != "command-search") {
+			app.current_path = path;
 
-		app.current_path = path;
+			app.increment_trace_pointer();
 
-		app.increment_trace_pointer();
+			app.trace[app.trace_pointer] = path;
 
-		app.trace[app.trace_pointer] = path;
+			app.increment_trace_pointer();
 
-		app.increment_trace_pointer();
+			app.trace[app.trace_pointer] = "0";
 
-		app.trace[app.trace_pointer] = "0";
-
-		app.decrement_trace_pointer();
-
+			app.decrement_trace_pointer();
+		}
 	}
+
+	return list;
 }
 
 void debug(terminal &app, string debug_msg) {

@@ -29,7 +29,7 @@ terminal::terminal() {
 
 	total_records_in_current_directory = 0;
 
-	ioctl(0,TIOCGWINSZ, &terminal_size);
+	ioctl(0,TIOCGWINSZ, & terminal_size);
 
 	set_window_parameters();
 

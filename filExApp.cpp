@@ -17,6 +17,8 @@ int main() {
 
 	clear_terminal();
 
+	//app.set_window_parameters();
+
 	vector < tuple < string, string, char > >  file_list = ls_impl(true, app);	// defined in linux_cmd
 	
 	app.current_path = app.root_path;
@@ -31,7 +33,7 @@ int main() {
 	
 	hold_terminal(app);
 
-	fflush(stdin);
+	fflush(stdout);
 
 	keyboard_settings_on();
 

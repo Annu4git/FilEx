@@ -18,7 +18,14 @@ string too_few_args = "Too few arguments found! Try something like : ";
 vector <string> break_string_into_tokens(terminal &app, string command_text);
 
 void print_message(terminal &app, string message_to_user) {
-	app.print_text("                                                                                           ");
+	app.set_cursor_position(app.message_row_no, 1, true);
+	string print_space = "";
+
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+	app.print_text(print_space);
+	
 	app.set_cursor_position(app.message_row_no, 1, true);
 	app.print_text(message_to_user);
 }
@@ -32,23 +39,48 @@ void reset_command_space(terminal &app) {
 	for(int i = 0; i < app.terminal_col; i++) {
 		print_fence = print_fence + "-";
 	}
+
+	string print_space = "";
+
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+
 	app.print_text(print_fence);
 	app.new_line();
-	app.print_text("                                                                       ");
+	app.print_text(print_space);
 	app.set_cursor_position(app.command_row_no, 1, true);
 	app.print_text(":");
 }
 
 void clear_command_space(terminal &app) {
+	
 	app.set_cursor_position(app.fence_row_no, 1, true);
-	app.print_text("                                                                       ");
+	
+	string print_space = "";
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+	app.print_text(print_space);
+	
 	app.new_line(); 
-	app.print_text(" ");
+	
+	print_space = "";
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+	app.print_text(print_space);
+
 	app.new_line();
-	app.print_text("                                                                       ");
+	
+	print_space = "";
+	for(int i = 0; i < app.terminal_col; i++) {
+		print_space = print_space + " ";
+	}
+	app.print_text(print_space);
 }
 
-void select_command(terminal &app, vector <string> token_stream) {
+int select_command(terminal &app, vector <string> token_stream) {
 	if(token_stream.size() > 0) {
 		
 		string command = token_stream[0];
@@ -64,7 +96,9 @@ void select_command(terminal &app, vector <string> token_stream) {
 			if(token_stream.size() < 3) {
 				message_to_user = error_msg + too_few_args + "copy foo.txt bar.txt baz.mp4 ~/foobar";
 			} else {
-				copy_impl(app, token_stream, token_stream[token_stream.size() - 1]);
+				string destination_path = token_stream[token_stream.size() - 1];
+				destination_path = get_absolute_path_for_file(app, destination_path);
+				copy_impl(app, token_stream, destination_path);
 				message_to_user = "Copied successfully.";
 
 			}
@@ -74,8 +108,10 @@ void select_command(terminal &app, vector <string> token_stream) {
 			if(token_stream.size() < 3) {
 				message_to_user = "Error: Too few arguments found! Try something like : move foo.txt bar.txt baz.mp4 ~/foobar";
 			} else {
-				move_impl(app, token_stream);
-			message_to_user = "Moved successfully.";
+				string destination_path = token_stream[token_stream.size() - 1];
+				destination_path = get_absolute_path_for_file(app, destination_path);
+				move_impl(app, token_stream, destination_path);
+				message_to_user = "Moved successfully.";
 
 			}
 
@@ -101,6 +137,7 @@ void select_command(terminal &app, vector <string> token_stream) {
 
 				string file_to_be_created = token_stream[1];
 				string directory_path = token_stream[2];
+
 				create_file_impl(app, file_to_be_created, directory_path);
 				message_to_user = "File created successfully.";
 			}
@@ -123,7 +160,8 @@ void select_command(terminal &app, vector <string> token_stream) {
 				message_to_user = "Error: Too few arguments found! Try something like : delete_file <file_path>";
 			} else {
 
-				string file_to_be_deleted = app.current_path + "/" + token_stream[1];
+				string file_to_be_deleted = token_stream[1];
+				file_to_be_deleted = get_absolute_path_for_file(app, file_to_be_deleted);
 				delete_file_impl(app, file_to_be_deleted);
 				message_to_user = "File deleted successfully.";
 			}
@@ -134,7 +172,8 @@ void select_command(terminal &app, vector <string> token_stream) {
 				message_to_user = "Error: Too few arguments found! Try something like : delete_dir <directory_path>";
 			} else {
 
-				string directory_to_be_deleted = app.current_path + "/" + token_stream[1];
+				string directory_to_be_deleted = token_stream[1];
+				directory_to_be_deleted = get_absolute_path_for_file(app, directory_to_be_deleted);
 				delete_directory_impl(app, directory_to_be_deleted);
 				message_to_user = "Directory deleted successfully.";
 			}
@@ -154,15 +193,25 @@ void select_command(terminal &app, vector <string> token_stream) {
 				} else {
 					directory_path = app.root_path + "/" + directory_path ;
 				}
+
+				debug(app, directory_path);
 				
 				directory_path = get_absolute_path(app, directory_path);
 
+				debug(app, directory_path);
+
 				enter_into_directory(app, directory_path, "command-goto", "");
 
-				return;
+				message_to_user = "Opening directory";
+
+				print_message(app, message_to_user);
+
+				return 0;
 			}
 
 		} else if(command == "search") {
+
+			app.search_results = 0;
 
 			if(token_stream.size() < 2) {
 				message_to_user = "Error: Too few arguments found! Try something like : search <filename>";
@@ -170,9 +219,14 @@ void select_command(terminal &app, vector <string> token_stream) {
 
 				vector < tuple < string, string, char > > search_result;
 				string search_query = token_stream[1];
+				vector < tuple < string, string, char > > searched_list = 
 				enter_into_directory(app, app.current_path, "command-search", search_query);
 
-				return;
+				if(searched_list.size() == 0) {
+					message_to_user = "No results found!";
+				}
+				print_message(app, message_to_user);
+				return -1;
 			}
 
 			
@@ -203,7 +257,7 @@ void select_command(terminal &app, vector <string> token_stream) {
 
 	}
 
-	return;
+	return 0;
 	
 }
 
@@ -237,12 +291,14 @@ string enter_in_command_mode(terminal &app) {
 				(app.cursor_position_y)--;
 				app.set_cursor_position(true);
 				cout << " ";
+				fflush(stdout);
 				app.set_cursor_position(true);
 			}
 
 		} else {
 			(app.cursor_position_y)++;
 			cout << c;
+			fflush(stdout);
 
 			if(c == '\n') {
 				
@@ -251,9 +307,16 @@ string enter_in_command_mode(terminal &app) {
 				if(token_stream.size() > 0) {
 					string command = token_stream[0];
 					
-					select_command(app, token_stream);
+					int status = select_command(app, token_stream);
 					
-					if(command == "goto" || command == "search") {
+					if(command == "search") {
+						if(status == -1) {
+
+						} else {
+							return "";
+						}
+
+					} else if(command == "goto") {
 						start_new_command = 0;
 						return "";
 					}

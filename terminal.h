@@ -24,7 +24,9 @@ public:
 
 	int cursor_position_x;
 
-	int cursor_position_y;;
+	int cursor_position_y;
+
+	int max_position_x;
 
 	int index_of_first_record_to_be_displayed;
 
@@ -43,6 +45,8 @@ public:
 	int command_row_no;
 
 	int message_row_no;
+
+	int search_results;
 
 	vector < tuple < string, string, char > > current_file_list;
 

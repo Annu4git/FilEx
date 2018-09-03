@@ -21,7 +21,7 @@ void hold_terminal(terminal &app);
 
 void clear_terminal();
 
-void enter_into_directory(terminal &app, string directory_path, string mode, string search_query);
+vector < tuple < string, string, char > > enter_into_directory(terminal &app, string directory_path, string mode, string search_query);
 
 int trim_path(string &path, terminal app);
 

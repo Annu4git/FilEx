@@ -160,20 +160,19 @@ void copy_recursively(terminal &app, string source_path,
 void copy_impl(terminal &app, vector <string> token_stream, 
 	string destination_path) {
 
-	destination_path = app.root_path + "/" + destination_path;
-
 	for(int i = 1; i < token_stream.size() - 1; i++) {
 		copy_recursively(app, app.current_path, token_stream[i], destination_path);
 	}
 }
 
-void move_impl(terminal &app, vector <string> token_stream) {
+void move_impl(terminal &app, vector <string> token_stream, string destination_path) {
 	string seperator = "/";
 
-	string destination_file_location = token_stream[token_stream.size() - 1];
+	string destination_file_location = destination_path;
 
 	for(int i = 1; i < token_stream.size() - 1; i++) {
 
+		string source_file_absolute_path = app.current_path + "/" + token_stream[i];
 		string source_file_path = token_stream[i];
 
 		string destination_file_path = destination_file_location;
@@ -181,7 +180,7 @@ void move_impl(terminal &app, vector <string> token_stream) {
 		destination_file_path = destination_file_path + seperator;
 		destination_file_path = destination_file_path + source_file_path;
 
-		rename_impl(app, source_file_path, destination_file_path);
+		rename_impl(app, source_file_absolute_path, destination_file_path);
 	}
 
 }
@@ -192,10 +191,6 @@ void rename_impl(terminal &app, string old_file, string new_file) {
 			new_file.resize(new_file.size() - 1);
 	}
 
-	string msg = "old name : " + old_file;
-	msg = msg + " new name : " + new_file;
-	debug(app, msg);
-	
 	rename(old_file.c_str(), new_file.c_str());
 }
 
@@ -214,6 +209,9 @@ void create_file_impl(terminal &app, string file_name, string directory_path) {
 
 	destination_file_path = destination_file_path + seperator;
 	destination_file_path = destination_file_path + file_name;
+
+	string msg = "destination_file_path : " + destination_file_path; 
+	debug(app, msg);
 
 	int destination_file_handle = open(destination_file_path.c_str(),O_WRONLY | O_CREAT | O_TRUNC, 
 		S_IRUSR | S_IWUSR | S_IRGRP |S_IWGRP | S_IROTH | S_IWOTH);
@@ -429,6 +427,9 @@ string get_absolute_path(terminal &app, string path) {
 		trim_path(absolute_path, app);
 	} else if(path == "~" || path == "~/" || path == "/") {
 		absolute_path = app.root_path;
+	} else if(path[0] == '~' && path[1] == '/') {
+		trim_path_from_left(path, app);
+		absolute_path = app.root_path + "/" + path;
 	} else {
 		absolute_path = path;
 	}

@@ -13,7 +13,7 @@ using namespace std;
 void copy_impl(terminal &app, vector <string> token_stream, 
 	string destination_file_location);
 
-void move_impl(terminal &app, vector <string> token_stream);
+void move_impl(terminal &app, vector <string> token_stream, string destination_path);
 
 void rename_impl(terminal &app, string old_file, string new_file);
 
