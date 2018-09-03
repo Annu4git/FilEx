@@ -1,3 +1,10 @@
+/*
+
+Name  	: Anurag Chaturvedi
+Roll No : 2018201024
+
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
