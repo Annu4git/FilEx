@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <sys/ioctl.h>
+
 
 using namespace std;
 
@@ -30,9 +32,23 @@ public:
 
 	int total_records_in_current_directory;
 
+	struct winsize terminal_size;
+
+	int terminal_row;
+
+	int terminal_col;
+
+	int fence_row_no;
+
+	int command_row_no;
+
+	int message_row_no;
+
 	vector < tuple < string, string, char > > current_file_list;
 
 	terminal();
+
+	void set_window_parameters();
 
 	void reset_index_of_first_record_to_be_displayed();
 

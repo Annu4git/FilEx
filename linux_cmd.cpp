@@ -191,6 +191,10 @@ void rename_impl(terminal &app, string old_file, string new_file) {
 	if(new_file[new_file.size() - 1] == '\n') {
 			new_file.resize(new_file.size() - 1);
 	}
+
+	string msg = "old name : " + old_file;
+	msg = msg + " new name : " + new_file;
+	debug(app, msg);
 	
 	rename(old_file.c_str(), new_file.c_str());
 }
@@ -306,11 +310,9 @@ void search_impl(terminal &app, string current_directory_path, string search_que
 				}
 			} else {
 
-				size_t found = file_name.find(search_query);
-	  			if (found!=std::string::npos) {
+				if(file_name == search_query) {
 					search_result.push_back(it);
-	  			}
-				
+				}
 			}
 
 			while(!directory_queue.empty()) {
@@ -322,12 +324,12 @@ void search_impl(terminal &app, string current_directory_path, string search_que
 }
 
 void traverse_impl(terminal &app, string current_directory_path, 
-	string dumpl_file_name, int count) {
+	string dump_file_name, int count) {
 
-	FILE *file = fopen(dumpl_file_name.c_str(), "a");
+	FILE *file = fopen(dump_file_name.c_str(), "a");
 
 	if(count == 0) {
-		create_file_impl(app, dumpl_file_name, app.root_path);
+		create_file_impl(app, dump_file_name, app.root_path);
 		count = 1;
 	}
 
@@ -338,8 +340,6 @@ void traverse_impl(terminal &app, string current_directory_path,
 
 	fprintf(file, "%s:\n", current_directory_path.c_str());
 
-	//fprintf(file, "%s:\t", current_directory_path);
-
 	int line_counter = 1;
 
 	if(file_list.size() > 0) {
@@ -347,7 +347,7 @@ void traverse_impl(terminal &app, string current_directory_path,
 		for(auto it : file_list) {
 
 			if(line_counter == 5) {
-				fprintf(file, "%s\n");
+				fprintf(file, "\n");
 				line_counter = 1;
 			}
 
@@ -372,7 +372,7 @@ void traverse_impl(terminal &app, string current_directory_path,
 	}
 
 	while(!directory_queue.empty()) {
-			traverse_impl(app, directory_queue.front() , dumpl_file_name, count);
+			traverse_impl(app, directory_queue.front() , dump_file_name, count);
 			directory_queue.pop();
 		}
 
@@ -380,11 +380,11 @@ void traverse_impl(terminal &app, string current_directory_path,
 	fclose(file);
 }
 
-void snapshot_impl(terminal &app, string directory_path_and_name, string dumpl_file_name) {
+void snapshot_impl(terminal &app, string directory_path_and_name, string dump_file_name) {
 	
-	dumpl_file_name = app.root_path + "/" + dumpl_file_name;
+	dump_file_name = app.root_path + "/" + dump_file_name;
 	directory_path_and_name = app.current_path + "/" + directory_path_and_name;
-	traverse_impl(app, directory_path_and_name, dumpl_file_name, 0);
+	traverse_impl(app, directory_path_and_name, dump_file_name, 0);
 }
 
 
@@ -434,4 +434,26 @@ string get_absolute_path(terminal &app, string path) {
 	}
 
 	return absolute_path;
+}
+
+string get_absolute_path_for_file(terminal &app, string file_name) {
+
+	string absolute_file_path;
+
+	if(file_name[0] == '.') {
+		trim_path_from_left(file_name, app);
+		absolute_file_path = app.current_path + "/" + file_name;
+				
+	} else if(file_name[0] == '~') {
+		trim_path_from_left(file_name, app);
+		absolute_file_path = app.root_path + "/" + file_name;
+	
+	} else if (file_name[0] == '/') {
+		absolute_file_path = file_name;
+	} 
+	else {
+		absolute_file_path = app.current_path + "/" + file_name;
+	}
+
+	return absolute_file_path;
 }

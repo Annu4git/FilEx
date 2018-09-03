@@ -1,3 +1,5 @@
+/* new command mode cpp */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>

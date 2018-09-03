@@ -39,4 +39,6 @@ vector < tuple < string, string, char > > ls_impl_with_search(string current_dir
 
 string get_absolute_path(terminal &app, string path);
 
+string get_absolute_path_for_file(terminal &app, string file_name);
+
 #endif

@@ -239,6 +239,20 @@ int trim_path(string &path, terminal app) {
 	return 1;
 }
 
+int trim_path_from_left(string &path, terminal app) {
+
+	int i;
+	for(i = 0; i < path.length(); i++) {
+		if(path[i] == '/') {
+			break;
+		}
+	}
+
+	path = path.substr(i+1, path.size() - i - 1);
+
+	return 1;
+}
+
 void enter_into_directory(terminal &app, string directory_path, string mode, string search_query) {
 
 	int relative_index = 3;

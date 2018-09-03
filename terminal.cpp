@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <sys/ioctl.h>
+
 
 #include "terminal.h"
 
@@ -27,6 +29,19 @@ terminal::terminal() {
 
 	total_records_in_current_directory = 0;
 
+	ioctl(0,TIOCGWINSZ, &terminal_size);
+
+	set_window_parameters();
+
+}
+
+void terminal::set_window_parameters() {
+	terminal_row = terminal_size.ws_row;
+	terminal_col = terminal_size.ws_col;
+
+	fence_row_no = terminal_row-2;
+	command_row_no = terminal_row -1;
+	message_row_no = terminal_row;
 }
 
 void terminal::reset_index_of_first_record_to_be_displayed() {

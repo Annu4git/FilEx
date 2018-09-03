@@ -25,6 +25,8 @@ void enter_into_directory(terminal &app, string directory_path, string mode, str
 
 int trim_path(string &path, terminal app);
 
+int trim_path_from_left(string &path, terminal app);
+
 void debug(terminal &app, string debug_msg);
 
 #endif
